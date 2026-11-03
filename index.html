@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mail</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#f6f8fc">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mail">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{font:15px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#efeae2;color:#111b21;display:flex;flex-direction:column;overflow:hidden}
+button{font:inherit;cursor:pointer}
+
+/* header */
+header{background:#008069;color:#fff;padding:10px 6px 10px 12px;display:flex;align-items:center;gap:10px;padding-top:max(10px,env(safe-area-inset-top))}
+.av{width:40px;height:40px;border-radius:50%;background:#d9fdd3;color:#008069;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex:none}
+.hd{flex:1;min-width:0}
+.hd b{display:block;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd small{display:block;font-size:12.5px;opacity:.9;height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd small.ty{color:#d9fdd3;font-weight:600}
+#more{background:none;border:0;color:#fff;font-size:24px;width:40px;height:40px;border-radius:50%;line-height:1}
+#more:active{background:rgba(255,255,255,.15)}
+
+/* join */
+#join{margin:auto;width:min(92%,360px);background:#fff;padding:22px;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.12)}
+#join h2{margin:0 0 14px}
+#join input{width:100%;margin-bottom:10px;padding:12px;border:1px solid #ccc;border-radius:10px;font:inherit}
+#join button{width:100%;padding:12px;border:0;border-radius:10px;background:#008069;color:#fff;font-weight:600}
+#join p{font-size:13px;color:#667781;margin:10px 0 0}
+
+/* chat */
+#chat{display:none;flex:1;min-height:0;flex-direction:column}
+#sb{flex:none;padding:6px 10px;background:#f0f2f5}
+#sq{width:100%;border:0;border-radius:10px;padding:9px 14px;font:inherit;font-size:15px;background:#fff;color:#111b21;outline:none}
+body.dark #sb{background:#111b21}
+body.dark #sq{background:#202c33;color:#e9edef}
+#msgs{flex:1;overflow-y:auto;padding:10px 10px 6px;display:flex;flex-direction:column;gap:3px;
+  background-color:#efeae2;
+  background-image:radial-gradient(rgba(11,20,26,.045) 1.2px,transparent 1.4px),radial-gradient(rgba(11,20,26,.03) 1px,transparent 1.2px);
+  background-size:26px 26px,26px 26px;background-position:0 0,13px 13px}
+.m{position:relative;max-width:82%;min-width:64px;padding:5px 8px 4px 9px;border-radius:8px;background:#fff;align-self:flex-start;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere;box-shadow:0 1px .5px rgba(11,20,26,.13);touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.m.me{background:#d9fdd3;align-self:flex-end}
+.m.first{margin-top:6px}
+.m.first:not(.me){border-top-left-radius:0}
+.m.first.me{border-top-right-radius:0}
+.m.flash{animation:fl 1.1s}
+@keyframes fl{0%,60%{box-shadow:0 0 0 100vmax rgba(0,128,105,.18) inset}100%{box-shadow:0 1px .5px rgba(11,20,26,.13)}}
+.n{display:block;font-size:12.5px;font-weight:600;color:#06cf9c;padding-right:18px}
+.tx{display:inline}
+.meta{float:right;margin:6px 0 -2px 10px;font-size:11px;color:#667781;white-space:nowrap;line-height:1.2}
+.meta i{font-style:normal;margin-right:3px}
+.tk{font-weight:700;letter-spacing:-2px;margin-left:3px}
+.tk.s{color:#53bdeb}
+.del{color:#667781;font-style:italic}
+.q{display:block;border-left:4px solid #06cf9c;background:rgba(11,20,26,.06);border-radius:6px;padding:4px 8px;margin:1px 0 4px;cursor:pointer;overflow:hidden}
+.me .q{background:rgba(11,20,26,.07)}
+.q b{display:block;font-size:12.5px;color:#06cf9c}
+.q span{display:block;font-size:13px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ar{position:absolute;top:1px;right:2px;width:22px;height:20px;border:0;background:none;color:#667781;font-size:14px;line-height:20px;padding:0;border-radius:6px;opacity:.85}
+.me .ar{background:linear-gradient(90deg,transparent,#d9fdd3 40%)}
+
+/* reply / edit bar */
+#bar{display:none;background:#f0f2f5;padding:8px 10px 0;align-items:center;gap:8px}
+#bar .bx{flex:1;min-width:0;background:#fff;border-left:4px solid #06cf9c;border-radius:8px;padding:6px 10px}
+#bar b{display:block;font-size:12.5px;color:#06cf9c}
+#bar span{display:block;font-size:13.5px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#barx{border:0;background:none;font-size:20px;color:#667781;width:32px;height:32px}
+
+footer{display:flex;gap:8px;padding:8px;background:#f0f2f5;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+footer input{flex:1;padding:12px 16px;border:0;border-radius:24px;font:inherit;outline:0;min-width:0}
+footer button{width:46px;height:46px;border:0;border-radius:50%;background:#008069;color:#fff;font-size:19px;flex:none}
+
+/* whatsapp look */
+footer{background:transparent;gap:6px;padding:6px 8px}
+.pill{flex:1;display:flex;align-items:center;background:#fff;border-radius:24px;padding:0 4px;min-width:0}
+.pill input{background:transparent!important;padding:12px 4px!important;border-radius:0!important}
+.pill button{width:38px;height:44px;background:none;color:#667781;font-size:21px;border-radius:0;flex:none}
+#bar{background:transparent}
+.m.first::before{content:"";position:absolute;top:0;width:9px;height:13px;background:inherit}
+.m.first:not(.me)::before{left:-8px;clip-path:polygon(100% 0,100% 100%,0 0)}
+.m.first.me::before{right:-8px;clip-path:polygon(0 0,100% 0,0 100%)}
+.ds{align-self:center;background:#fff;color:#54656f;font-size:12.5px;padding:5px 12px;border-radius:8px;margin:8px 0 4px;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.enc{align-self:center;max-width:88%;text-align:center;background:#ffeecd;color:#54656f;font-size:12.5px;padding:6px 10px;border-radius:8px;margin:4px 0 8px}
+.rx{display:block;clear:both;width:fit-content;background:#fff;border-radius:12px;padding:1px 6px;font-size:14px;margin:2px 0 -12px;box-shadow:0 1px 2px rgba(11,20,26,.25)}
+.m.hasrx{margin-bottom:12px}
+.mi{display:block;max-width:100%;width:240px;border-radius:6px;margin:1px 0 3px;cursor:pointer}
+#emp{display:none;grid-template-columns:repeat(8,1fr);gap:2px;background:#f0f2f5;padding:6px 8px;max-height:150px;overflow-y:auto}
+#emp span{font-size:24px;text-align:center;padding:4px 0;cursor:pointer}
+#menu .rr{display:flex;justify-content:space-around;padding:8px 6px;font-size:24px;border-bottom:1px solid rgba(128,128,128,.2)}
+#menu .rr span{padding:0 4px}
+#iv{display:none;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.92);align-items:center;justify-content:center}
+#iv img{max-width:100%;max-height:100%}
+body.dark{background:#0b141a;color:#e9edef}
+body.dark header{background:#202c33}
+body.dark #msgs{background-color:#0b141a;background-image:radial-gradient(rgba(255,255,255,.035) 1.2px,transparent 1.4px),radial-gradient(rgba(255,255,255,.025) 1px,transparent 1.2px)}
+body.dark .m{background:#202c33;box-shadow:none}
+body.dark .m.me{background:#005c4b}
+body.dark .me .ar{background:linear-gradient(90deg,transparent,#005c4b 40%)}
+body.dark .ar,body.dark .meta,body.dark .vl,body.dark .q span{color:#8696a0}
+body.dark .pill{background:#2a3942}
+body.dark #emp{background:#202c33}
+body.dark .pill input{color:#e9edef}
+body.dark .pill button{color:#8696a0}
+body.dark #bar .bx{background:#1d282f}
+body.dark #bar span{color:#8696a0}
+body.dark #menu{background:#233138;color:#e9edef}
+body.dark #menu div:active{background:#2a3942}
+body.dark .ds{background:#182229;color:#8696a0}
+body.dark .enc{background:#182229;color:#ffd279}
+body.dark .rx{background:#233138}
+body.dark #rec{background:#202c33;color:#e9edef}
+body.dark .vb i{background:rgba(255,255,255,.2)}
+body.dark .q{background:rgba(0,0,0,.25)}
+body.dark #join{background:#202c33;color:#e9edef}
+body.dark #join input{background:#2a3942;color:#e9edef;border-color:#2a3942}
+
+/* voice */
+.vc{display:flex;align-items:center;gap:8px;width:215px;max-width:100%;padding:2px 22px 2px 0}
+.vp{flex:none;width:36px;height:36px;border-radius:50%;border:0;background:#008069;color:#fff;font-size:14px;padding:0}
+.vb{flex:1;height:22px;display:flex;align-items:center;cursor:pointer}
+.vb i{display:block;width:100%;height:4px;border-radius:2px;background:rgba(11,20,26,.18);position:relative}
+.vb i b{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:2px;background:#008069}
+.vb i b::after{content:"";position:absolute;right:-5px;top:-3px;width:10px;height:10px;border-radius:50%;background:#008069}
+.vl{flex:none;font-size:12px;color:#667781;min-width:32px;text-align:right}
+#rec{display:none;align-items:center;gap:12px;padding:8px 12px;background:#f0f2f5;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+#rec .dot{width:11px;height:11px;border-radius:50%;background:#e53935;animation:bl 1s infinite}
+@keyframes bl{50%{opacity:.25}}
+#rec #rt{font-size:16px;font-variant-numeric:tabular-nums;flex:1}
+#rcx{border:0;background:none;font-size:22px;width:40px;height:40px}
+#rcs{width:46px;height:46px;border:0;border-radius:50%;background:#008069;color:#fff;font-size:19px}
+
+/* floating menu */
+#menu{position:fixed;display:none;z-index:50;background:#fff;border-radius:10px;box-shadow:0 4px 18px rgba(11,20,26,.28);min-width:170px;padding:6px 0}
+#menu div{padding:11px 18px;font-size:15px}
+#menu div:active{background:#f0f2f5}
+#menu .red{color:#d32f2f}
+
+
+/* settings page */
+#setp{display:none;position:fixed;left:0;top:0;right:0;bottom:0;z-index:60;background:#f0f2f5;flex-direction:column;color:#111b21}
+#setp .sh{background:#008069;color:#fff;display:flex;align-items:center;gap:6px;padding:10px 8px;padding-top:max(10px,env(safe-area-inset-top))}
+#setp .sh button{background:none;border:0;color:#fff;font-size:26px;width:42px;height:42px;border-radius:50%;line-height:1}
+#setp .sh button:active{background:rgba(255,255,255,.15)}
+#setp .sh b{font-size:19px;font-weight:600}
+#setp .sb{flex:1;overflow:auto;padding:4px 0 40px;-webkit-overflow-scrolling:touch}
+#setp h4{margin:18px 18px 7px;font-size:12.5px;letter-spacing:.6px;color:#008069;text-transform:uppercase;font-weight:700}
+#setp .card{background:#fff;margin:0 10px;border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.07)}
+#setp .row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid #eef0f2}
+#setp .row:active{background:#f5f6f6}
+#setp .card>:last-child{border-bottom:0}
+#setp .ic{font-size:20px;width:26px;text-align:center;flex:none}
+#setp .tx{flex:1;min-width:0}
+#setp .tx b{display:block;font-weight:500;font-size:15.5px}
+#setp .tx small{display:block;color:#667781;font-size:12.5px;margin-top:2px;line-height:1.3}
+#setp .red .tx b{color:#d32f2f}
+#setp .go{color:#8696a0;font-size:20px;flex:none}
+#setp .pb{min-width:58px;text-align:center;padding:7px 14px;border-radius:15px;font-size:13px;font-weight:700;letter-spacing:.4px;flex:none;color:#fff;background:#e53935;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+#setp .pb.on{background:#1faa59}
+#setp .pb.act{background:#e9edef;color:#111b21;box-shadow:none}
+#setp .red .pb.act{color:#d32f2f}
+#setp .seg{display:flex;gap:8px;padding:2px 14px 13px 52px;border-bottom:1px solid #eef0f2}
+#setp .seg span{padding:6px 15px;border-radius:16px;background:#e9edef;font-size:13px}
+#setp .seg span.a{background:#00a884;color:#fff}
+body.dark #setp{background:#0b141a;color:#e9edef}
+body.dark #setp .sh{background:#202c33}
+body.dark #setp h4{color:#00a884}
+body.dark #setp .card{background:#202c33;box-shadow:none}
+body.dark #setp .row,body.dark #setp .seg{border-color:#2a3942}
+body.dark #setp .row:active{background:#2a3942}
+body.dark #setp .tx small{color:#8696a0}
+body.dark #setp .seg span{background:#2a3942;color:#e9edef}
+body.dark #setp .seg span.a{background:#00a884;color:#fff}
+body.dark #setp .pb.act{background:#2a3942;color:#e9edef}
+body.dark #setp .red .pb.act{color:#ff8a80}
+
+/* recent-apps cover */
+#cover{display:none;position:fixed;inset:0;z-index:9999;background:#000}
+
+/* video call */
+#vcall,#acall,#emob,#clrb{background:none;border:0;color:#fff;font-size:20px;width:38px;height:40px;border-radius:50%;padding:0;flex:none}
+#vcall:active,#acall:active,#emob:active,#clrb:active{background:rgba(255,255,255,.15)}
+#ringbar{display:none;position:fixed;left:10px;right:10px;top:max(10px,env(safe-area-inset-top));z-index:120;background:#1c2530;color:#fff;border-radius:14px;padding:10px 12px;align-items:center;justify-content:space-between;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+#ringbar .rb-txt small{display:block;opacity:.7;font-size:12px}
+.rb-btns{display:flex;gap:8px}
+.rb-btns button{width:42px;height:42px;border:0;border-radius:50%;font-size:18px}
+.rb-ok{background:#25d366;color:#fff}
+.rb-x{background:#e24747;color:#fff}
+#callview{display:none;position:fixed;inset:0;z-index:130;background:#0b0f14}
+#callview video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#111}
+#callview #remoteV{z-index:1}
+@media (min-width:700px){#callview #remoteV{object-fit:contain}}
+#callview #localV{z-index:3;width:110px;height:150px;top:max(12px,env(safe-area-inset-top));right:12px;left:auto;bottom:auto;border-radius:14px;border:2px solid rgba(255,255,255,.6);background:#222;transform:scaleX(-1);box-shadow:0 2px 10px rgba(0,0,0,.5)}
+#callstate{z-index:4;position:absolute;top:max(14px,env(safe-area-inset-top));left:14px;color:#fff;font-size:14px;background:rgba(0,0,0,.4);padding:4px 10px;border-radius:20px}
+#callbtns{z-index:4;position:absolute;left:0;right:0;bottom:max(24px,env(safe-area-inset-bottom));display:flex;justify-content:center;gap:22px}
+#callbtns button{width:54px;height:54px;border-radius:50%;border:0;font-size:22px;background:#1c2530;color:#fff}
+#callbtns button.off{background:#e24747}
+#cv-end{background:#e24747}
+/* ===== Mail (camouflage inbox) ===== */
+#mail{--bg:#fff;--fg:#1f1f1f;--fg2:#5f6368;--pill:#e9eef6;--line:#e6e8eb;--fab:#c2e7ff;--fabfg:#001d35;--acc:#0b57d0;--navpill:#d3e3fd;--snack:#303030;--card:#fff;--hl:#f2f6fc;
+  display:none;position:fixed;inset:0;z-index:100;background:var(--bg);color:var(--fg);flex-direction:column;overflow:hidden;
+  font-family:"Google Sans",Roboto,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+body.dark #mail{--bg:#1d1e21;--fg:#e3e3e3;--fg2:#a8abb0;--pill:#2f3033;--line:#2c2d30;--fab:#0842a0;--fabfg:#d3e3fd;--acc:#a8c7fa;--navpill:#0842a0;--snack:#e3e3e3;--card:#141416;--hl:#26272a}
+#mail *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+#mail button{background:none;border:0;color:inherit;font:inherit;padding:0;cursor:pointer}
+#mail svg{display:block;flex:none}
+.gm-v{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)}
+#gm-read,#gm-comp,#gm-meet{display:none;z-index:3}
+.gm-ib{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--fg2);flex:none}
+#mail .gm-ib:active{background:var(--hl)}
+
+/* top search bar */
+#gm-top{display:flex;align-items:center;gap:8px;padding:8px 14px 6px 10px;padding-top:max(10px,env(safe-area-inset-top))}
+#gm-top .gm-ib{color:var(--fg)}
+#gm-pill{flex:1;min-width:0;display:flex;align-items:center;height:50px;border-radius:25px;background:var(--pill);padding:0 8px 0 18px}
+#gm-q{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--fg);font-size:16px;font-family:inherit;-webkit-user-select:text;user-select:text;text-align:left}
+#gm-q::placeholder{color:var(--fg2);opacity:1}
+#gm-q:placeholder-shown{text-align:center}
+#gm-clr{display:none;width:36px;height:36px;border-radius:50%;align-items:center;justify-content:center;color:var(--fg2)}
+#gm-me{width:34px;height:34px;border-radius:50%;background:#0b87d6;color:#fff;font-weight:500;font-size:16px;display:flex;align-items:center;justify-content:center;flex:none}
+.gm-sec{padding:12px 20px 6px;font-size:13px;font-weight:500;color:var(--fg2);letter-spacing:.1px}
+
+/* rows */
+#gm-rows{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 0 150px;overscroll-behavior:contain}
+.gm-row{display:flex;gap:14px;padding:11px 18px 11px 16px;cursor:pointer}
+.gm-row:active{background:var(--hl)}
+.gm-av{width:40px;height:40px;border-radius:50%;color:#fff;font-size:18px;font-weight:500;display:flex;align-items:center;justify-content:center;flex:none;margin-top:2px}
+.gm-rb{flex:1;min-width:0}
+.gm-l1,.gm-l3{display:flex;align-items:center;gap:8px}
+.gm-fr{flex:1;min-width:0;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg2)}
+.gm-dt{flex:none;font-size:12px;color:var(--fg2)}
+.gm-l2{font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg2);margin-top:1px}
+.gm-sn{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg2);opacity:.85}
+.gm-st{width:30px;height:30px;margin:-4px -6px -4px 0;display:flex;align-items:center;justify-content:center;color:var(--fg2);flex:none}
+.gm-st.on{color:#f4b400}
+.gm-row.un .gm-fr,.gm-row.un .gm-l2{color:var(--fg);font-weight:700}
+.gm-row.un .gm-dt{color:var(--fg);font-weight:700}
+.gm-empty{padding:70px 30px;text-align:center;color:var(--fg2);font-size:15px}
+
+/* compose button + bottom nav */
+#mail #gm-fab{position:absolute;right:16px;bottom:calc(76px + env(safe-area-inset-bottom,0px));height:56px;padding:0 20px 0 16px;border-radius:16px;background:var(--fab);color:var(--fabfg)!important;display:flex;align-items:center;gap:12px;font-size:15px;font-weight:500;box-shadow:0 2px 8px rgba(0,0,0,.28)}
+#gm-nav{position:absolute;left:0;right:0;bottom:0;height:calc(64px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);display:flex;background:var(--card);border-top:1px solid var(--line)}
+body:not(.dark) #gm-nav{background:#f3f6fc}
+#gm-nav button{flex:1;display:flex;align-items:center;justify-content:center;color:var(--fg2)}
+#gm-nav button span{width:64px;height:32px;border-radius:16px;display:flex;align-items:center;justify-content:center}
+#gm-nav button.on{color:var(--fg)}
+#gm-nav button.on span{background:var(--navpill)}
+
+/* drawer */
+#gm-dr{position:absolute;inset:0;z-index:6;pointer-events:none}
+#gm-scrim{position:absolute;inset:0;background:rgba(0,0,0,.45);opacity:0;transition:opacity .2s}
+#gm-panel{position:absolute;left:0;top:0;bottom:0;width:min(82%,320px);background:var(--bg);transform:translateX(-100%);transition:transform .22s;overflow-y:auto;padding:max(14px,env(safe-area-inset-top)) 0 20px;box-shadow:2px 0 14px rgba(0,0,0,.3)}
+body.dark #gm-panel{background:#252629}
+#gm-dr.open{pointer-events:auto}
+#gm-dr.open #gm-scrim{opacity:1}
+#gm-dr.open #gm-panel{transform:none}
+.gm-brand{padding:6px 24px 14px;font-size:22px;font-weight:500;color:#d93025;letter-spacing:.2px}
+#mail .gm-di{display:flex;align-items:center;gap:18px;height:48px;margin:0 10px 0 0;padding:0 18px 0 24px;border-radius:0 24px 24px 0;font-size:14.5px;font-weight:500;width:calc(100% - 10px);text-align:left}
+#mail .gm-di.on{background:var(--navpill);color:var(--fg);font-weight:700}
+body:not(.dark) #mail .gm-di.on{background:#d3e3fd}
+.gm-di b{margin-left:auto;font-weight:500;font-size:13px}
+.gm-hr{height:1px;background:var(--line);margin:8px 0}
+
+/* read view */
+.gm-bar{display:flex;align-items:center;gap:2px;padding:6px 6px 6px 4px;padding-top:max(6px,env(safe-area-inset-top))}
+.gm-bar .sp{flex:1}
+#gm-rd-body{flex:1;overflow-y:auto;-webkit-user-select:text;user-select:text;padding:6px 0 40px}
+.gm-sub{padding:6px 18px 10px;font-size:21px;line-height:1.3;font-weight:400;display:flex;gap:10px;align-items:flex-start}
+.gm-sub span{flex:1}
+.gm-chip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:5px;background:var(--pill);color:var(--fg2);margin:0 0 8px 18px}
+.gm-who{display:flex;gap:12px;align-items:center;padding:8px 18px 10px}
+.gm-who .nm{font-size:15px;font-weight:600}
+.gm-who .to{font-size:12.5px;color:var(--fg2)}
+.gm-who .tm{margin-left:auto;font-size:12px;color:var(--fg2);white-space:nowrap}
+.gm-bd{padding:6px 18px 14px;font-size:15px;line-height:1.55}
+.gm-bd p{margin:0 0 14px}
+.gm-act{display:flex;gap:10px;padding:8px 18px 20px}
+.gm-act button{flex:1;height:44px;border:1px solid var(--line);border-radius:22px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14.5px;font-weight:500;color:var(--fg2)}
+#mail .gm-act button:active{background:var(--hl)}
+
+/* compose */
+#gm-comp .gm-f{display:flex;align-items:center;gap:10px;padding:0 18px;min-height:52px;border-bottom:1px solid var(--line)}
+#gm-comp .gm-f label{font-size:14.5px;color:var(--fg2);width:52px;flex:none}
+#gm-comp .gm-f input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--fg);font-size:16px;font-family:inherit;padding:14px 0;-webkit-user-select:text;user-select:text}
+#gm-cbody{flex:1;resize:none;background:none;border:0;outline:0;color:var(--fg);font-size:16px;line-height:1.5;font-family:inherit;padding:16px 18px;-webkit-user-select:text;user-select:text}
+#gm-cbody::placeholder,#gm-comp input::placeholder{color:var(--fg2);opacity:.8}
+.gm-ttl{font-size:20px;flex:1;padding-left:6px}
+
+/* meet */
+#gm-meet .mt{margin:auto;text-align:center;padding:30px;max-width:340px}
+#gm-meet .mt p{color:var(--fg2);font-size:14.5px;margin:10px 0 22px;line-height:1.5}
+#gm-meet .mt button{display:block;width:100%;height:46px;border-radius:23px;margin-top:10px;background:var(--fab);color:var(--fabfg);font-weight:500;font-size:15px}
+#gm-meet .mt button.o{background:none;border:1px solid var(--line);color:var(--acc)}
+
+/* snackbar + first-run setup */
+#gm-toast{position:absolute;left:16px;right:16px;bottom:calc(144px + env(safe-area-inset-bottom,0px));z-index:9;background:var(--snack);color:#fff;border-radius:6px;padding:14px 16px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+body.dark #gm-toast{color:#1f1f1f}
+#gm-toast.on{opacity:1}
+#gm-setup{display:none;position:absolute;inset:0;z-index:12;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:20px}
+#gm-setup .bx{width:100%;max-width:360px;background:var(--bg);border-radius:20px;padding:22px 20px 18px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+#gm-setup h3{margin:0 0 8px;font-size:19px;font-weight:600}
+#gm-setup p{margin:0 0 14px;font-size:14px;line-height:1.5;color:var(--fg2)}
+#gm-setup input{width:100%;border:1px solid var(--line);background:var(--pill);color:var(--fg);border-radius:12px;padding:13px 14px;font-size:16px;outline:0;-webkit-user-select:text;user-select:text}
+#gm-setup button{width:100%;height:46px;margin-top:12px;border-radius:23px;background:var(--acc);color:#fff;font-weight:600;font-size:15px}
+body.dark #gm-setup button{color:#062e6f}
+
+</style>
+</head>
+<body>
+<header>
+  <div class="av" id="avt">💬</div>
+  <div class="hd"><b id="ttl">Dost Chat</b><small id="st"></small></div>
+  <button id="emob" aria-label="Chat emoji karo">😀</button>
+  <button id="clrb" aria-label="Chat saaf karo">🧹</button>
+  <button id="acall" aria-label="Voice call">📞</button>
+  <button id="vcall" aria-label="Video call">📹</button>
+  <button id="more" aria-label="Settings">⋮</button>
+</header>
+
+<div id="join">
+  <h2>Chat shuru karo</h2>
+  <input id="name" placeholder="Aapka naam" maxlength="20">
+  <input id="room" placeholder="Chat code (lamba aur secret, jaise: ali-sara-7391)" maxlength="40">
+  <button id="go">Chat kholo</button>
+  <p>Dost ko bhi yehi chat code batao. Jis ka code same hoga wahi chat dekh sakta hai.</p>
+</div>
+
+<div id="chat">
+  <div id="sb"><input id="sq" type="text" placeholder="🔍 Search…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></div>
+  <div id="msgs"></div>
+  <div id="bar"><div class="bx"><b id="bt"></b><span id="bs"></span></div><button id="barx">✕</button></div>
+  <div id="rec"><button id="rcx" aria-label="Cancel">🗑️</button><span class="dot"></span><span id="rt">0:00</span><button id="rcs" aria-label="Send voice">➤</button></div>
+  <div id="emp"></div>
+  <footer id="ft">
+    <div class="pill"><button id="emo" aria-label="Emoji">😊</button><input id="in" placeholder="Message likho…" autocomplete="off"><button id="att" aria-label="Photo">📎</button></div>
+    <button id="send">➤</button>
+  </footer>
+  <input type="file" id="fi" accept="image/*,video/*" hidden>
+</div>
+
+<div id="menu"></div>
+<div id="setp"></div>
+<div id="iv"><img alt=""></div>
+
+<div id="mail">
+  <!-- inbox list -->
+  <div class="gm-v" id="gm-list">
+    <div id="gm-top">
+      <button class="gm-ib" id="gm-menu" data-ic="menu" aria-label="Open navigation drawer"></button>
+      <div id="gm-pill">
+        <input id="gm-q" type="text" placeholder="Search in mail" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" aria-label="Search in mail">
+        <button id="gm-clr" data-ic="close" aria-label="Clear search"></button>
+      </div>
+      <div id="gm-me">M</div>
+    </div>
+    <div class="gm-sec" id="gm-sec">Primary</div>
+    <div id="gm-rows"></div>
+    <button id="gm-fab"><span data-ic="edit"></span>Compose</button>
+    <div id="gm-nav">
+      <button id="gm-n-mail" class="on" aria-label="Mail"><span data-ic="mail"></span></button>
+      <button id="gm-n-meet" aria-label="Meet"><span data-ic="video"></span></button>
+    </div>
+  </div>
+
+  <!-- email detail -->
+  <div class="gm-v" id="gm-read">
+    <div class="gm-bar">
+      <button class="gm-ib" id="rd-back" data-ic="back" aria-label="Back"></button>
+      <span class="sp"></span>
+      <button class="gm-ib" id="rd-arch" data-ic="archive" aria-label="Archive"></button>
+      <button class="gm-ib" id="rd-del" data-ic="trash" aria-label="Delete"></button>
+      <button class="gm-ib" id="rd-unr" data-ic="mail" aria-label="Mark as unread"></button>
+      <button class="gm-ib" id="rd-more" data-ic="more" aria-label="More"></button>
+    </div>
+    <div id="gm-rd-body"></div>
+  </div>
+
+  <!-- compose -->
+  <div class="gm-v" id="gm-comp">
+    <div class="gm-bar">
+      <button class="gm-ib" id="cp-back" data-ic="back" aria-label="Back"></button>
+      <span class="gm-ttl">Compose</span>
+      <button class="gm-ib" id="cp-att" data-ic="clip" aria-label="Attach file"></button>
+      <button class="gm-ib" id="cp-send" data-ic="send" aria-label="Send" style="color:var(--acc)"></button>
+    </div>
+    <div class="gm-f"><label>From</label><input id="cp-from" value="me" readonly></div>
+    <div class="gm-f"><label>To</label><input id="cp-to" type="email" placeholder="" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    <div class="gm-f"><label>Subject</label><input id="cp-sub" type="text" placeholder="" autocomplete="off"></div>
+    <textarea id="gm-cbody" placeholder="Compose email"></textarea>
+  </div>
+
+  <!-- meet tab -->
+  <div class="gm-v" id="gm-meet">
+    <div class="gm-bar"><span class="gm-ttl" style="padding-left:14px">Meet</span></div>
+    <div class="mt">
+      <div style="color:var(--acc);display:flex;justify-content:center" data-ic="video" data-sz="56"></div>
+      <p>Start or join a video meeting with a link or a code.</p>
+      <button id="mt-new">New meeting</button>
+      <button id="mt-join" class="o">Join with a code</button>
+    </div>
+    <div id="gm-nav2" style="position:absolute;left:0;right:0;bottom:0;height:calc(64px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);display:flex;background:var(--card);border-top:1px solid var(--line)">
+      <button id="gm-n2-mail" aria-label="Mail" style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--fg2)"><span data-ic="mail" style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"></span></button>
+      <button id="gm-n2-meet" aria-label="Meet" style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--fg)"><span data-ic="video" style="width:64px;height:32px;border-radius:16px;background:var(--navpill);display:flex;align-items:center;justify-content:center"></span></button>
+    </div>
+  </div>
+
+  <!-- drawer -->
+  <div id="gm-dr"><div id="gm-scrim"></div><div id="gm-panel"></div></div>
+
+  <div id="gm-toast"></div>
+
+  <!-- first-run secret code -->
+  <div id="gm-setup">
+    <div class="bx">
+      <h3>Secret code set karo</h3>
+      <p>Mail ke Search bar mein ye code likh kar Enter dabaoge to private chat khul jayegi. Kam se kam 3 akshar, kisi ko batana mat.</p>
+      <input id="gm-sc" type="text" placeholder="Secret code" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button id="gm-scok">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="cover"></div>
+
+<div id="ringbar">
+  <div class="rb-txt"><b id="rb-name"></b><small id="rb-sm">Video call aa rahi hai</small></div>
+  <div class="rb-btns"><button id="rb-dec" class="rb-x">✕</button><button id="rb-acc" class="rb-ok">📹</button></div>
+</div>
+
+<div id="callview">
+  <video id="remoteV" autoplay playsinline></video>
+  <video id="localV" autoplay playsinline muted></video>
+  <div id="callstate"></div>
+  <div id="callbtns">
+    <button id="cv-mic">🎙️</button>
+    <button id="cv-cam">🎥</button>
+    <button id="cv-end">📞</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+var $=function(i){return document.getElementById(i)};
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k)||'';if(v===null){localStorage.removeItem(k);return ''}localStorage.setItem(k,v)}catch(e){return ''}}
+$('name').value=ls('dc_name'); $('room').value=ls('dc_room');
+var cid=ls('dc_cid'); if(!cid){cid=Math.random().toString(36).slice(2,10); ls('dc_cid',cid);}
+
+var all={}, seen={}, sentSeen={}, edits={}, dels={}, typers={}, dlv={}, reacts={}, hidden={}, peer=null;
+var client=null, base='', myName='', conn='', replyTo=null, editing=null, lastTyping=0;
+
+/* ---------- chat history is device par save hoti hai (IndexedDB) ---------- */
+var DB=null, saveT=null, histKey='';
+function dbOpen(cb){
+  if(DB)return cb(DB);
+  try{
+    var r=indexedDB.open('dostchat',1);
+    r.onupgradeneeded=function(){r.result.createObjectStore('kv');};
+    r.onsuccess=function(){DB=r.result;cb(DB);};
+    r.onerror=function(){cb(null);};
+  }catch(e){cb(null);}
+}
+function dbPut(k,v){ dbOpen(function(d){ if(!d)return; try{d.transaction('kv','readwrite').objectStore('kv').put(v,k);}catch(e){} }); }
+function dbGet(k,cb){ dbOpen(function(d){ if(!d)return cb(null); try{ var q=d.transaction('kv').objectStore('kv').get(k); q.onsuccess=function(){cb(q.result||null)}; q.onerror=function(){cb(null)}; }catch(e){cb(null);} }); }
+function dbDel(k){ dbOpen(function(d){ if(!d)return; try{d.transaction('kv','readwrite').objectStore('kv').delete(k);}catch(e){} }); }
+function saveHist(){
+  if(!histKey)return;
+  var ids=Object.keys(all).sort(function(a,b){return all[b].ts-all[a].ts}), keep={}, size=0, n=0;
+  for(var i=0;i<ids.length;i++){
+    var m=all[ids[i]];
+    size+=(m.img?m.img.length:0)+(m.audio?m.audio.length:0)+(m.video?m.video.length:0)+String(m.text||'').length+300;
+    if(++n>5000||size>80e6)break;
+    keep[ids[i]]=m;
+  }
+  dbPut(histKey,{all:keep,hidden:hidden,edits:edits,dels:dels,reacts:reacts,seen:seen,dlv:dlv});
+}
+function scheduleSave(){ if(!histKey||saveT)return; saveT=setTimeout(function(){saveT=null;saveHist();},800); }
+function loadHist(cb){
+  dbGet('h:'+base,function(st){
+    try{
+      if(st){
+        Object.keys(st.all||{}).forEach(function(i){ if(!all[i])all[i]=st.all[i]; });
+        Object.keys(st.hidden||{}).forEach(function(i){ hidden[i]=1; });
+        Object.keys(st.edits||{}).forEach(function(i){ if(!edits[i])edits[i]=st.edits[i]; });
+        Object.keys(st.dels||{}).forEach(function(i){ if(!dels[i])dels[i]=st.dels[i]; });
+        Object.keys(st.seen||{}).forEach(function(i){ seen[i]=1; });
+        Object.keys(st.dlv||{}).forEach(function(i){ dlv[i]=1; });
+        Object.keys(st.reacts||{}).forEach(function(i){ reacts[i]=reacts[i]||{}; Object.keys(st.reacts[i]).forEach(function(c){ if(!reacts[i][c])reacts[i][c]=st.reacts[i][c]; }); });
+      }
+    }catch(e){}
+    histKey='h:'+base; cb();
+  });
+}
+document.addEventListener('visibilitychange',function(){ if(document.hidden)saveHist(); });
+window.addEventListener('pagehide',saveHist);
+
+/* ---------- helpers ---------- */
+function clip(s,n){s=String(s||'');return s.length>n?s.slice(0,n)+'…':s}
+function hash(s){var h=5381;s='dc|'+s;for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return h.toString(36)}
+function hhmm(ts){return new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+
+/* ---------- emoji mask + search secret code ---------- */
+function sqSet(){return !!ls('dc_sq')}
+var maskOn = ls('dc_mask')==='1' && !!ls('dc_sq'), sqText='';
+var MASK_EM='😀 😂 😍 😎 🥳 😴 🤔 😇 🙃 😜 🤗 😋 🥰 😏 😅 🤩 😬 🙄 😌 😢 😡 🤠 🤓 😺 🐶 🐱 🦊 🐼 🐸 🐵 🌸 🌼 🍀 ⭐ 🌙 ☀️ 🔥 🍕 🍔 🍩 🍉 🍓 ☕ ⚽ 🎈 🎁 🎵 🚗 ✈️'.split(' ');
+function seedOf(id){var n=0;String(id).split('').forEach(function(c){n+=c.charCodeAt(0)});return n}
+function maskText(str,seed){
+  var out='',i=0;
+  Array.from(String(str||'')).forEach(function(ch){
+    if(/\s/.test(ch)){out+=' ';return;}
+    out+=MASK_EM[(ch.codePointAt(0)+i*7+seed)%MASK_EM.length]; i++;
+  });
+  return out;
+}
+function maskApply(on){
+  maskOn=on; ls('dc_mask',on?'1':null);
+  sqText=''; var q=$('sq'); if(q)q.value='';
+  if(on){ stopPlayers(); cancelBar(); hideMenu(); $('iv').style.display='none'; $('emp').style.display='none'; $('in').value=''; updIcon(); }
+  setStatus(); render(false);
+}
+function hideChat(){ closeSettings(); stopRec(true); if(sqSet()&&!maskOn)maskApply(true); }
+function setSq(){
+  var c=prompt('Search ka secret code likho (kam se kam 3 akshar)'); if(c===null)return;
+  c=c.trim().toLowerCase();
+  if(c.length<3){alert('Secret code kam se kam 3 akshar ka rakho');return;}
+  ls('dc_sq',hash('sq|'+c));
+  alert('Secret code lag gaya. Ab app minimize karne par chat emoji ban jayegi. Upar Search mein apna secret code likho to chat wapis text mein aa jayegi.');
+}
+function askOldSq(next){
+  var c=prompt('Purana secret code likho'); if(c===null)return;
+  if(hash('sq|'+c.trim().toLowerCase())===ls('dc_sq'))next(); else alert('Galat secret code');
+}
+$('sq').oninput=function(){
+  var v=$('sq').value.trim().toLowerCase();
+  if(maskOn){
+    if(sqSet()&&v&&hash('sq|'+v)===ls('dc_sq'))maskApply(false);
+    return;
+  }
+  sqText=v; render(false);
+};
+
+/* ---------- status / typing ---------- */
+function setStatus(){
+  var now=Date.now(), names=[];
+  Object.keys(typers).forEach(function(c){ if(now-typers[c].ts<3500)names.push(typers[c].name); else delete typers[c]; });
+  var st=$('st');
+  if(names.length){st.textContent=names.join(', ')+' typing…';st.className='ty';}
+  else{
+    var tx=conn;
+    if(conn==='online'||!conn){ tx=peer?((now-peer.ts<20000)?'online':'last seen '+hhmm(peer.ts)):''; }
+    st.textContent=tx;st.className='';
+  }
+  $('ttl').textContent=(peer&&!maskOn)?peer.name:'Dost Chat'; $('avt').textContent=(peer&&!maskOn)?peer.name.charAt(0).toUpperCase():'💬';
+  if(maskOn){st.textContent='';st.className='';}
+}
+setInterval(setStatus,1000);
+
+/* ---------- render ---------- */
+function render(keepScroll){
+  scheduleSave();
+  var box=$('msgs'), atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<80, oldTop=box.scrollTop;
+  var list=Object.keys(all).map(function(k){return all[k]}).sort(function(a,b){return a.ts-b.ts}).slice(-400);
+  box.textContent='';
+  var en=document.createElement('div');en.className='enc';en.textContent='🔒 Is chat ke messages sirf wahi dekh sakte hain jinke paas chat code hai.';box.appendChild(en);
+  var prev=null;
+  list=list.filter(function(v){return !hidden[v.id]});
+  if(!maskOn&&sqText)list=list.filter(function(v){return !v.deleted&&String(v.text||'').toLowerCase().indexOf(sqText)>=0});
+  list.forEach(function(v){
+    var mine=v.cid===cid, isDel=!!v.deleted, sd=seedOf(v.id);
+    var newDay=!prev||new Date(prev.ts).toDateString()!==new Date(v.ts).toDateString();
+    if(newDay){var ds=document.createElement('div');ds.className='ds';ds.textContent=dayLabel(v.ts);box.appendChild(ds);}
+    var rxs=reacts[v.id]?Object.keys(reacts[v.id]).map(function(c){return reacts[v.id][c]}):[];
+    var el=document.createElement('div'); el.className='m'+(mine?' me':'')+((newDay||prev.cid!==v.cid)?' first':'')+(rxs.length&&!isDel?' hasrx':''); el.id='m_'+v.id;
+    if(!mine && (!prev||prev.cid!==v.cid)){var n=document.createElement('span');n.className='n';n.textContent=maskOn?maskText(v.name,sd):v.name;el.appendChild(n);}
+    if(v.reply && !isDel){
+      var q=document.createElement('span');q.className='q';
+      var qb=document.createElement('b');qb.textContent=v.reply.cid===cid?'Aap':v.reply.name;
+      var qs=document.createElement('span');qs.textContent=maskOn?maskText(clip(v.reply.text,80),sd):clip(v.reply.text,80);
+      q.appendChild(qb);q.appendChild(qs);
+      q.onclick=function(e){e.stopPropagation();jumpTo(v.reply.id)};
+      el.appendChild(q);
+    }
+    if(v.img&&!isDel&&maskOn){var ph=document.createElement('span');ph.className='tx';ph.textContent='🖼️';el.appendChild(ph);}
+    else if(v.img&&!isDel){var im=document.createElement('img');im.className='mi';im.src=v.img;im.onclick=function(e){e.stopPropagation();$('iv').firstElementChild.src=v.img;$('iv').style.display='flex'};el.appendChild(im);}
+    if(v.vn&&!isDel){
+      if(maskOn){var pm=document.createElement('span');pm.className='tx';pm.textContent='🎬';el.appendChild(pm);}
+      else if(v.video){var vd=document.createElement('video');vd.className='mi';vd.src=v.video;vd.controls=true;vd.playsInline=true;vd.preload='metadata';vd.onclick=function(e){e.stopPropagation()};el.appendChild(vd);}
+      else{var pw=document.createElement('span');pw.className='tx';pw.textContent=(Date.now()-v.ts>120000)?'📹 Video poori nahi aayi':'📹 Video aa rahi hai…';el.appendChild(pw);}
+    }
+    if(v.audio&&!isDel&&maskOn){ var pv=document.createElement('span');pv.className='tx';pv.textContent='🎤🎶';el.appendChild(pv); }
+    else if(v.audio&&!isDel){ el.appendChild(voiceEl(v)); }
+    else if(!(v.img&&!isDel&&v.text==='📷 Photo')&&!(v.vn&&!isDel)){
+      var b=document.createElement('span');b.className='tx'+(isDel?' del':'');
+      b.textContent=isDel?'🚫 Ye message delete kar diya gaya':(maskOn?maskText(v.text,sd):v.text);
+      el.appendChild(b);
+    }
+    var t=document.createElement('span');t.className='meta';
+    if(v.edited&&!isDel){var e=document.createElement('i');e.textContent='edited';t.appendChild(e);}
+    t.appendChild(document.createTextNode(hhmm(v.ts)));
+    if(mine&&!isDel){var k=document.createElement('span');k.className='tk'+(seen[v.id]?' s':'');k.textContent=(seen[v.id]||dlv[v.id])?'\u2713\u2713':'\u2713';t.appendChild(k);}
+    el.appendChild(t);
+    if(rxs.length&&!isDel){var rx=document.createElement('span');rx.className='rx';rx.textContent=rxs.join('')+(rxs.length>1?' '+rxs.length:'');el.appendChild(rx);}
+    if(!isDel){
+      if(mine){
+        var ar=document.createElement('button');ar.className='ar';ar.textContent='\u2335';ar.innerHTML='&#8964;';ar.setAttribute('aria-label','Options');
+        ar.onclick=function(e){e.stopPropagation();msgMenu(v,ar.getBoundingClientRect())};
+        el.appendChild(ar);
+      }
+      attachSwipe(el,v);
+    }
+    box.appendChild(el); prev=v;
+  });
+  if(atBottom||!keepScroll)box.scrollTop=box.scrollHeight; else box.scrollTop=oldTop;
+}
+function jumpTo(id){
+  var el=$('m_'+id); if(!el)return;
+  el.scrollIntoView({block:'center',behavior:'smooth'});
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+
+/* ---------- swipe right = reply ---------- */
+function attachSwipe(el,v){
+  var sx=0,sy=0,dx=0,on=false,lock=false,lp=0;
+  el.addEventListener('pointerdown',function(e){
+    if(e.target.closest&&e.target.closest('.ar'))return;
+    on=true;lock=false;sx=e.clientX;sy=e.clientY;dx=0;el.style.transition='none';
+    clearTimeout(lp);lp=setTimeout(function(){ if(on&&!lock){on=false;if(navigator.vibrate)try{navigator.vibrate(20)}catch(_){} var r=el.getBoundingClientRect();msgMenu(v,{left:r.left,right:r.right,top:r.top,bottom:r.bottom});} },450);
+  });
+  el.addEventListener('pointermove',function(e){
+    if(!on)return;
+    var mx=e.clientX-sx,my=e.clientY-sy; if(Math.abs(mx)>8||Math.abs(my)>8)clearTimeout(lp);
+    if(!lock){ if(Math.abs(my)>12&&Math.abs(my)>Math.abs(mx)){on=false;el.style.transform='';return;}
+               if(mx>8&&Math.abs(mx)>Math.abs(my)){lock=true;try{el.setPointerCapture(e.pointerId)}catch(_){}} }
+    if(lock){dx=Math.max(0,Math.min(mx,90));el.style.transform='translateX('+dx+'px)';}
+  });
+  el.addEventListener('contextmenu',function(e){e.preventDefault();msgMenu(v,{left:e.clientX,right:e.clientX,top:e.clientY,bottom:e.clientY})});
+  function end(){
+    clearTimeout(lp);
+    if(!on&&!dx)return;
+    on=false;el.style.transition='transform .18s';el.style.transform='';
+    if(dx>=60){ if(navigator.vibrate)try{navigator.vibrate(15)}catch(_){} setReply(v); }
+    dx=0;
+  }
+  el.addEventListener('pointerup',end);
+  el.addEventListener('pointercancel',end);
+}
+
+/* ---------- voice messages ---------- */
+var players={}, rec=null;
+function fmt(s){s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2)}
+function voiceEl(v){
+  var p=players[v.id];
+  if(!p){
+    var a=new Audio(v.audio); a.preload='metadata';
+    p={a:a,ui:null};
+    a.ontimeupdate=function(){ if(p.ui){p.ui.fill.style.width=Math.min(100,a.currentTime/(v.dur||a.duration||1)*100)+'%';p.ui.lbl.textContent=fmt(a.currentTime);} };
+    a.onended=function(){ a.currentTime=0; if(p.ui){p.ui.btn.textContent='▶';p.ui.fill.style.width='0';p.ui.lbl.textContent=fmt(v.dur);} };
+    players[v.id]=p;
+  }
+  var w=document.createElement('div');w.className='vc';
+  var btn=document.createElement('button');btn.className='vp';btn.textContent=p.a.paused?'▶':'⏸';
+  var bar=document.createElement('div');bar.className='vb';
+  var tr=document.createElement('i'),fill=document.createElement('b');tr.appendChild(fill);bar.appendChild(tr);
+  var lbl=document.createElement('span');lbl.className='vl';
+  lbl.textContent=fmt(p.a.paused&&!p.a.currentTime?v.dur:p.a.currentTime);
+  fill.style.width=Math.min(100,p.a.currentTime/(v.dur||1)*100)+'%';
+  p.ui={btn:btn,fill:fill,lbl:lbl};
+  btn.onclick=function(e){
+    e.stopPropagation();
+    if(p.a.paused){
+      Object.keys(players).forEach(function(k){ if(players[k]!==p&&!players[k].a.paused){players[k].a.pause();if(players[k].ui)players[k].ui.btn.textContent='▶';} });
+      p.a.play().catch(function(){}); btn.textContent='⏸';
+    } else { p.a.pause(); btn.textContent='▶'; }
+  };
+  bar.onclick=function(e){
+    e.stopPropagation();
+    var r=tr.getBoundingClientRect(); p.a.currentTime=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*(v.dur||p.a.duration||0);
+  };
+  w.appendChild(btn);w.appendChild(bar);w.appendChild(lbl);
+  return w;
+}
+function stopPlayers(){ Object.keys(players).forEach(function(k){try{players[k].a.pause()}catch(_){}}); players={}; }
+
+function startRec(){
+  if(rec||!client||!client.connected)return;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){alert(mediaErr({name:'NoMedia'},false));return;}
+  if(!window.MediaRecorder){alert('Is browser mein voice record nahi ho sakti. Chrome ya Safari (naya version) use karo.');return;}
+  askMedia(false).then(function(stream){
+   try{
+    var types=['audio/webm;codecs=opus','audio/mp4','audio/webm'];
+    var mt=''; for(var i=0;i<types.length;i++){ if(MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(types[i])){mt=types[i];break;} }
+    var mr; try{mr=mt?new MediaRecorder(stream,{mimeType:mt,audioBitsPerSecond:24000}):new MediaRecorder(stream);}catch(e){mr=new MediaRecorder(stream);}
+    rec={mr:mr,chunks:[],t0:Date.now(),cancel:false,stream:stream,timer:null};
+    mr.ondataavailable=function(e){ if(e.data&&e.data.size)rec.chunks.push(e.data); };
+    mr.onstop=function(){
+      var r=rec; rec=null; clearInterval(r.timer);
+      r.stream.getTracks().forEach(function(t){t.stop()});
+      $('rec').style.display='none'; $('ft').style.display='flex';
+      var dur=Math.round((Date.now()-r.t0)/1000);
+      if(r.cancel||dur<1||!r.chunks.length)return;
+      var blob=new Blob(r.chunks,{type:r.mr.mimeType||mt||'audio/webm'});
+      var fr=new FileReader();
+      fr.onload=function(){ sendVoice(fr.result,dur); };
+      fr.readAsDataURL(blob);
+    };
+    mr.start();
+    $('ft').style.display='none'; $('rec').style.display='flex'; $('rt').textContent='0:00';
+    rec.timer=setInterval(function(){
+      var s=(Date.now()-rec.t0)/1000; $('rt').textContent=fmt(s);
+      if(s>=60)stopRec(false);
+    },250);
+   }catch(err){ try{stream.getTracks().forEach(function(t){t.stop()})}catch(_){} rec=null; $('rec').style.display='none'; $('ft').style.display='flex'; alert('Voice record shuru nahi ho saki ('+((err&&err.name)||'error')+')'); }
+  }, function(e){
+    alert(mediaErr(e,false));
+  });
+}
+function stopRec(cancel){ if(!rec)return; rec.cancel=!!cancel; try{rec.mr.stop()}catch(e){} }
+$('rcx').onclick=function(){stopRec(true)};
+$('rcs').onclick=function(){stopRec(false)};
+
+function sendVoice(dataUrl,dur){
+  var msg={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),cid:cid,name:myName,text:'🎤 Voice message',audio:dataUrl,dur:dur,ts:Date.now()};
+  if(replyTo)msg.reply={id:replyTo.id,cid:replyTo.cid,name:replyTo.name,text:clip(replyTo.text,120)};
+  replyTo=null; updateBar();
+  merge([msg]); $('msgs').scrollTop=$('msgs').scrollHeight;
+  if(client&&client.connected)client.publish(base+'/msg',JSON.stringify(msg),{qos:1});
+}
+
+function dayLabel(ts){var d=new Date(ts),n=new Date(),y=new Date(Date.now()-864e5);
+  if(d.toDateString()===n.toDateString())return 'Aaj'; if(d.toDateString()===y.toDateString())return 'Kal';
+  return d.toLocaleDateString([],{day:'numeric',month:'short',year:'numeric'});}
+function setReact(id,em){
+  reacts[id]=reacts[id]||{}; if(em&&reacts[id][cid]!==em)reacts[id][cid]=em; else delete reacts[id][cid];
+  pub('react',{id:id,cid:cid,e:reacts[id][cid]||''}); render(true);
+}
+function msgMenu(v,rect){
+  if(maskOn)return;
+  var its=[{row:['👍','❤️','😂','😮','😢','🙏'],f:function(em){setReact(v.id,em)}},
+    {t:'↩️ Reply',f:function(){setReply(v)}}];
+  if(!v.audio&&!v.video&&!(v.img&&v.text==='📷 Photo'))its.push({t:'📋 Copy',f:function(){try{navigator.clipboard.writeText(v.text)}catch(e){}}});
+  if(v.cid===cid&&!v.audio&&!v.img&&!v.video)its.push({t:'✏️ Edit',f:function(){startEdit(v.id)}});
+  its.push({t:'🗑️ Mujhse delete',f:function(){hidden[v.id]=1;render(true)}});
+  if(v.cid===cid)its.push({t:'🗑️ Sab ke liye delete',c:'red',f:function(){delMsg(v.id)}});
+  showMenu(its,rect);
+}
+function sendImage(d){
+  var msg={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),cid:cid,name:myName,text:$('in').value.trim()||'📷 Photo',img:d,ts:Date.now()};
+  if(replyTo)msg.reply={id:replyTo.id,cid:replyTo.cid,name:replyTo.name,text:clip(replyTo.text,120)};
+  $('in').value='';replyTo=null;updateBar();
+  merge([msg]); $('msgs').scrollTop=$('msgs').scrollHeight;
+  if(client&&client.connected)client.publish(base+'/msg',JSON.stringify(msg),{qos:1});
+}
+function presPing(){ if(client&&client.connected&&myName)client.publish(base+'/pres',JSON.stringify({cid:cid,name:myName}),{qos:0}); }
+setInterval(presPing,8000);
+
+/* mic <-> send icon */
+function updIcon(){ var has=$('in').value.trim()||editing; $('send').textContent=has?'➤':'🎤'; $('send').setAttribute('aria-label',has?'Send':'Voice message'); }
+function sendOrMic(){ if($('in').value.trim()||editing)send(); else startRec(); }
+
+/* ---------- reply / edit bar ---------- */
+function updateBar(){
+  updIcon();
+  var bar=$('bar');
+  if(editing){bar.style.display='flex';$('bt').textContent='✏️ Message edit karo';$('bs').textContent=clip(all[editing]&&all[editing].text,80);}
+  else if(replyTo){bar.style.display='flex';$('bt').textContent=replyTo.cid===cid?'Aap':replyTo.name;$('bs').textContent=clip(replyTo.text,80);}
+  else bar.style.display='none';
+}
+function setReply(v){ if(maskOn)return; editing=null; replyTo={id:v.id,cid:v.cid,name:v.name,text:v.text}; updateBar(); $('in').focus(); }
+function startEdit(id){ if(!all[id])return; replyTo=null; editing=id; $('in').value=all[id].text; updateBar(); $('in').focus(); }
+function cancelBar(){ if(editing)$('in').value=''; editing=null; replyTo=null; updateBar(); }
+$('barx').onclick=cancelBar;
+
+/* ---------- floating menu ---------- */
+var menuAt=0;
+function showMenu(items,rect){
+  var m=$('menu'); m.textContent='';
+  items.forEach(function(it){
+    var d=document.createElement('div');
+    if(it.row){ d.className='rr'; it.row.forEach(function(em){var sp=document.createElement('span');sp.textContent=em;sp.onclick=function(e){e.stopPropagation();hideMenu();it.f(em)};d.appendChild(sp)}); }
+    else { d.textContent=it.t; if(it.c)d.className=it.c; d.onclick=function(e){e.stopPropagation();hideMenu();it.f();}; }
+    m.appendChild(d);
+  });
+  menuAt=Date.now();
+  m.style.display='block';
+  var w=m.offsetWidth,h=m.offsetHeight;
+  var left=Math.max(8,Math.min(rect.right-w,innerWidth-w-8));
+  var top=rect.bottom+4; if(top+h>innerHeight-8)top=Math.max(8,rect.top-h-4);
+  m.style.left=left+'px'; m.style.top=top+'px';
+}
+function hideMenu(){$('menu').style.display='none'}
+document.addEventListener('click',function(){ if(Date.now()-menuAt>400)hideMenu(); });
+
+/* ---------- messages ---------- */
+function applyMods(m){
+  if(edits[m.id]&&edits[m.id].cid===m.cid){m.text=edits[m.id].text;m.edited=1;}
+  if(dels[m.id]&&dels[m.id]===m.cid){m.deleted=1;}
+}
+function merge(arr){ var ch=false; arr.forEach(function(m){ if(m&&m.id&&!all[m.id]){applyMods(m);all[m.id]=m;ch=true;} }); if(ch)render(true); }
+function pub(topic,obj){ if(client&&client.connected)client.publish(base+'/'+topic,JSON.stringify(obj),{qos:1}); }
+function sendSeen(ids){
+  ids=ids.filter(function(i){return !sentSeen[i]});
+  if(!ids.length||!client||!client.connected)return;
+  ids.forEach(function(i){sentSeen[i]=1});
+  pub('seen',{cid:cid,ids:ids});
+}
+function seenAll(){ sendSeen(Object.keys(all).filter(function(i){return all[i].cid!==cid&&!all[i].deleted})); }
+
+function delMsg(id){
+  var m=all[id]; if(!m||m.cid!==cid)return;
+  if(!confirm('Ye message sab ke liye delete kar dein?'))return;
+  m.deleted=1; dels[id]=cid; pub('del',{id:id,cid:cid});
+  if(editing===id)cancelBar();
+  render(true);
+}
+
+function send(){
+  var text=$('in').value.trim(); if(!text||!client||!client.connected)return;
+  if(editing){
+    var m=all[editing];
+    if(m&&m.text!==text){ m.text=text;m.edited=1;edits[m.id]={cid:cid,text:text}; pub('edit',{id:m.id,cid:cid,text:text}); }
+    editing=null; $('in').value=''; updateBar(); render(true); return;
+  }
+  var msg={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),cid:cid,name:myName,text:text,ts:Date.now()};
+  if(replyTo)msg.reply={id:replyTo.id,cid:replyTo.cid,name:replyTo.name,text:clip(replyTo.text,120)};
+  $('in').value=''; replyTo=null; updateBar(); lastTyping=0;
+  merge([msg]); $('msgs').scrollTop=$('msgs').scrollHeight;
+  client.publish(base+'/msg',JSON.stringify(msg),{qos:1});
+  $('in').focus();
+}
+
+function start(){
+  var name=$('name').value.trim(), room=$('room').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g,'');
+  if(!name||room.length<4){alert('Naam likho aur kam se kam 4 akshar ka chat code do');return;}
+  ls('dc_name',name); ls('dc_room',room); myName=name;
+  $('join').style.display='none'; $('chat').style.display='flex'; conn='connecting…'; setStatus();
+  base='dostchat-v1/'+room;
+  loadHist(function(){ render(false); });
+  setTimeout(ntfyFirstRun,2500);
+  client=mqtt.connect('wss://broker.hivemq.com:8884/mqtt',{reconnectPeriod:2000,connectTimeout:10000,keepalive:20,resubscribe:true,clean:false,clientId:'dc_'+cid});
+  var _pub0=client.publish; client.publish=function(tp){ try{ if(tp===base+'/msg')relayPush(arguments[1]); }catch(e){} return _pub0.apply(client,arguments); };
+  client.on('connect',function(){ conn='online'; setStatus(); client.subscribe(base+'/vc',{qos:1}); client.subscribe(base+'/msg',{qos:1}); client.subscribe([base+'/seen',base+'/typing',base+'/edit',base+'/del',base+'/react',base+'/pres']); client.subscribe(base+'/rtc',{qos:1}); presPing(); client.publish(base+'/hist','',{retain:true}); });
+  client.on('reconnect',function(){ conn='reconnecting…'; setStatus(); });
+  client.on('offline',function(){ conn='offline'; setStatus(); });
+  client.on('error',function(){});
+  client.on('message',function(topic,payload){
+    try{
+      var d=JSON.parse(payload.toString()), t=topic.slice(base.length+1);
+      if(t==='seen'){ if(d.cid!==cid){ (d.ids||[]).forEach(function(i){seen[i]=1;dlv[i]=1}); (d.dlv||[]).forEach(function(i){dlv[i]=1}); render(true); } }
+      else if(t==='typing'){ if(d.cid!==cid){ typers[d.cid]={name:d.name,ts:Date.now()}; peer={cid:d.cid,name:d.name,ts:Date.now()}; setStatus(); }
+      else if(t==='pres'){} }
+      else if(t==='pres'){ if(d.cid!==cid){ var was=peer&&Date.now()-peer.ts<20000; peer={cid:d.cid,name:d.name,ts:Date.now()}; if(!was)presPing(); setStatus(); } }
+      else if(t==='react'){ if(d.cid!==cid){ reacts[d.id]=reacts[d.id]||{}; if(d.e)reacts[d.id][d.cid]=d.e; else delete reacts[d.id][d.cid]; render(true); } }
+      else if(t==='edit'){
+        if(d.cid===cid)return;
+        edits[d.id]={cid:d.cid,text:d.text};
+        var m=all[d.id]; if(m&&m.cid===d.cid){m.text=d.text;m.edited=1;render(true);}
+      }
+      else if(t==='del'){
+        if(d.cid===cid)return;
+        dels[d.id]=d.cid;
+        var m2=all[d.id]; if(m2&&m2.cid===d.cid){m2.deleted=1;render(true);}
+      }
+      else if(t==='rtc'){ if(d.cid!==cid) rtcHandle(d); }
+      else if(t==='vc'){ vcPart(d); }
+      else if(t==='msg'){
+        if(d.cid!==cid){delete typers[d.cid];peer={cid:d.cid,name:d.name,ts:Date.now()};if(!all[d.id]){pub('seen',{cid:cid,dlv:[d.id],ids:[]});}}
+        var _isNew=!all[d.id]; merge([d]); if(_isNew&&d.cid!==cid)notifyMsg(d); if(d.vn&&d.cid!==cid)vidDone(d.id); setStatus();
+        if(d.cid!==cid && !document.hidden) sendSeen([d.id]);
+      }
+    }catch(e){}
+  });
+  $('send').onclick=sendOrMic;
+  $('in').onkeydown=function(e){if(e.key==='Enter')send();};
+  $('in').oninput=function(){
+    updIcon();
+    var now=Date.now();
+    if(now-lastTyping>2000 && $('in').value && !editing){ lastTyping=now; if(client.connected)client.publish(base+'/typing',JSON.stringify({cid:cid,name:myName}),{qos:0}); }
+  };
+}
+
+/* ---------- settings menu + app lock ---------- */
+/* ---------- Mail (camouflage inbox) + secret search code ---------- */
+function pad2(n){return ('0'+n).slice(-2)}
+var Mail=(function(){
+  var MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  var IC={
+    menu:'M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z',
+    search:'M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',
+    back:'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z',
+    star:'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z',
+    starb:'M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24zM12 15.4l-3.76 2.27 1-4.28-3.32-2.88 4.38-.38L12 6.1l1.71 4.04 4.38.38-3.32 2.88 1 4.28L12 15.4z',
+    edit:'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z',
+    mail:'M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z',
+    video:'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z',
+    trash:'M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z',
+    archive:'M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z',
+    reply:'M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z',
+    fwd:'M12 8V4l8 8-8 8v-4H4V8z',
+    send:'M2.01 21L23 12 2.01 3 2 10l15 2-15 2z',
+    more:'M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
+    close:'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z',
+    inbox:'M19 3H4.99c-1.11 0-1.98.89-1.98 2L3 19c0 1.1.88 2 1.99 2H19c1.1 0 2-.9 2-2V5c0-1.11-.9-2-2-2zm0 12h-4c0 1.66-1.35 3-3 3s-3-1.34-3-3H4.99V5H19v10z',
+    draft:'M21.99 8c0-.72-.37-1.35-.94-1.7L12 1 2.95 6.3C2.38 6.65 2 7.28 2 8v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2l-.01-10zM12 13L3.74 7.84 12 3l8.26 4.84L12 13z',
+    warn:'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z',
+    clip:'M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z'
+  };
+  function svg(n,sz){sz=sz||24;return '<svg viewBox="0 0 24 24" width="'+sz+'" height="'+sz+'" fill="currentColor" aria-hidden="true"><path d="'+IC[n]+'"/></svg>';}
+  function icons(root){
+    Array.prototype.forEach.call(root.querySelectorAll('[data-ic]'),function(e){ e.innerHTML=svg(e.getAttribute('data-ic'),+e.getAttribute('data-sz')||24); });
+  }
+
+  /* ---------- seeded dummy data ---------- */
+  function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  var R=rng(20261104);
+  function pick(a){return a[Math.floor(R()*a.length)]}
+  function num(a,b){return a+Math.floor(R()*(b-a+1))}
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(R()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+  var ITEMS=['Wireless earbuds','Phone tripod stand','USB-C cable (2m)','LED ring light','Laptop sleeve 15"','Desk lamp','Bluetooth speaker','Mechanical keyboard','Power bank 10000mAh','1080p webcam','Mouse pad XL','Phone case'];
+  var COURSES=['Intro to E-commerce Analytics','AI Video Editing Basics','Motion Graphics for Beginners','Social Media Marketing 2026','Digital Storytelling','Prompt Engineering Essentials','Shopify Store Setup','Facebook Ads for Small Business','SEO Fundamentals','Content Calendar Planning'];
+  var WEEKS=['Introduction to e-commerce models','Online payment gateways','Digital marketing channels','Logistics and fulfilment','Marketplace vs own store','Customer retention','E-commerce law and privacy','Analytics and KPIs','Social commerce','Mobile commerce'];
+  var PROFS=['Prof. Imran Siddiqui','Ms. Hina Farooq','BBA-6 Class Group'];
+  var PEOPLE=['Hamza Ali','Bilal Ahmed','Sana Malik','Usman Tariq','Ayesha Khan','Zain Raza','Fatima Noor','Daniyal Shah'];
+  var CHAT=[
+    ['kal ka plan?','Yar kal university ke baad kya plan hai? Canteen chalte hain, phir library mein assignment par kaam kar lenge.'],
+    ['notes bhej do','Bhai pichle lecture ke notes bhej do please, main kal absent tha.'],
+    ['Project ki file','Group project ki final file mil gayi? Slides mein thori si formatting baqi hai, aaj raat tak kar dete hain.'],
+    ['Sunday cricket match','Is Sunday subah 8 baje ground mein match hai. Tum aa rahe ho na? Team mein ek banda kam hai.'],
+    ['Photos from the trip','Trip ki saari photos drive mein daal di hain. Link neeche hai, dekh lena aur apni favourite bata dena.'],
+    ['Eid Mubarak!','Aap ko aur aap ke ghar walon ko Eid Mubarak! Jaldi milte hain, daawat pakki.'],
+    ['Laptop ka charger','Tumhare paas extra laptop charger hai? Mera kharab ho gaya, kal ke liye chahiye tha.'],
+    ['Video edit dekh lo','Maine wo short animation wali video edit ki hai. Ek dafa dekh ke batao, intro thora slow lag raha hai?'],
+    ['Birthday party','Saturday raat birthday party hai, 8 baje. Gift ke liye sab 500 500 de rahe hain.'],
+    ['Internship ka pata chala?','Wo digital marketing wali internship ka kuch pata chala? Mujhe email aayi thi, interview next week hai.'],
+    ['Assignment','Sir ne kaha deadline Friday hai, tumne shuru kiya? Mil kar karte hain, kal library mein.'],
+    ['Meeting kal 4 baje','Group ki meeting kal 4 baje hai, online hogi. Link main bhej dunga. Sab ready rehna.'],
+    ['Fee voucher','Fee voucher ka kya hua? Last date 15 ko hai, bank jana hai kal?'],
+    ['All the best for the exam','Kal ke exam ke liye all the best! Dil se tayari karna, sab theek hoga.']
+  ];
+  var HEADS=['new text-to-video models compared','10 prompts for cinematic shots','lip-sync tools tested','animating a character from one image','editing Reels and Shorts faster','free asset pack for animators','keeping characters consistent across scenes','voice-over tools worth trying','storyboarding with AI','sound design on a budget'];
+  var WEBS=['Selling on marketplaces: what works','Building a brand on social media','Product photography with a phone','Email marketing for new stores','Customer support that scales','Pricing strategies for small shops'];
+  var DEVICES=['Chrome on Windows','Android phone','Chrome on Android','Edge on Windows','Safari on iPhone'];
+
+  var T=[];
+  function add(n,fn){for(var i=0;i<n;i++)T.push(fn(i));}
+  add(12,function(i){
+    var it=pick(ITEMS), n='PM-'+num(40000,99999), k=i%4;
+    if(k===0)return{f:'PakMart Orders',s:'Your order #'+n+' has shipped',b:['Hi,','Good news! Your order of '+it+' is on its way. Estimated delivery: '+num(2,5)+' working days.','Tracking number: TRK'+num(100000000,999999999),'Thanks for shopping with PakMart.']};
+    if(k===1)return{f:'PakMart Orders',s:'Out for delivery: '+it,b:['Hi,','Your '+it+' is out for delivery today. Please keep your phone nearby so the rider can reach you.','Order #'+n]};
+    if(k===2)return{f:'PakMart Orders',s:'Delivered: '+it,b:['Hi,','Your order #'+n+' ('+it+') was delivered. We hope you like it!','If something is wrong, you can start a return within 7 days from your orders page.']};
+    return{f:'PakMart',s:'How was your '+it+'?',b:['Hi,','You recently received '+it+'. Tell us what you think; it only takes a minute and helps other shoppers.','Rate your purchase in the PakMart app.']};
+  });
+  add(10,function(i){var c=COURSES[i%COURSES.length];return{f:'LearnHub',s:'New course: '+c,b:['Hello,','We just added a new course you may like: '+c+'.','It has '+num(18,42)+' short lessons, practical projects and a certificate when you finish. Learn at your own pace.','Happy learning,\nThe LearnHub team']};});
+  add(14,function(i){
+    var p=PROFS[i%3], k=i%6;
+    if(k===0)return{f:p,s:'Assignment '+num(1,4)+' deadline reminder',b:['Dear students,','A reminder that the e-commerce assignment is due this Friday by 11:59 PM. Upload it on the portal as a single PDF.','Late submissions will lose 10% per day. Please do your own work; plagiarism checks will be run.','Regards']};
+    if(k===1)return{f:p,s:'Week '+(i%10+1)+' slides uploaded',b:['Dear students,','Slides for Week '+(i%10+1)+' ('+WEEKS[i%10]+') are now on the course page. Please read them before the next class.','Regards']};
+    if(k===2)return{f:p,s:'Quiz '+num(1,3)+' marks posted',b:['Dear students,','Quiz marks have been posted on the portal. If you think there is a mistake, email me within two days with your roll number.','Regards']};
+    if(k===3)return{f:p,s:'Group project: online store prototype',b:['Hi all,','Please form groups of four and choose a product for your prototype online store. Send me your group members and product idea by Wednesday.','The final presentation will cover store design, payment flow and a simple marketing plan.']};
+    if(k===4)return{f:p,s:'Midterm syllabus and date',b:['Dear students,','The midterm will cover Weeks 1 to 6. It will be a mix of short questions and one case study. Bring your university ID.','Good luck with the preparation.']};
+    return{f:p,s:'Guest lecture: dropshipping in Pakistan',b:['Hi all,','We have a guest lecture next Tuesday on how local sellers run dropshipping stores, with a short Q&A at the end. Attendance is encouraged.','See you there.']};
+  });
+  add(20,function(i){var c=CHAT[i%CHAT.length];return{f:pick(PEOPLE),s:c[0],b:[c[1]],personal:1};});
+  add(8,function(i){
+    var k=i%4;
+    if(k===0)return{f:'CloudSafe',s:'New sign-in from '+pick(DEVICES),b:['Hi,','We noticed a new sign-in to your account from '+pick(DEVICES)+' near Karachi.','If this was you, you do not need to do anything. If not, please change your password.']};
+    if(k===1)return{f:'CloudSafe',s:'Your weekly security summary',b:['Hi,','This week we blocked '+num(0,6)+' suspicious sign-in attempts and found no issues with your saved passwords.','Keep two-step verification turned on for extra safety.']};
+    if(k===2)return{f:'CloudSafe',s:'Verify your recovery email',b:['Hi,','Please confirm your recovery email so you can get back into your account if you ever forget your password.','This takes less than a minute.']};
+    return{f:'CloudSafe',s:'Password changed successfully',b:['Hi,','Your account password was changed just now. If you did not do this, reset it right away from the sign-in page.']};
+  });
+  add(10,function(i){
+    var n=pick(PEOPLE).split(' ')[0], k=i%3;
+    if(k===0)return{f:'SnapCircle',s:n+' tagged you in a photo',b:['Hi,',n+' tagged you in a photo. Open the app to see it and say thanks.']};
+    if(k===1)return{f:'SnapCircle',s:'You have '+num(3,19)+' new followers',b:['Hi,','You gained new followers this week. People are liking your short videos. Keep posting!']};
+    return{f:'SnapCircle',s:n+' commented on your video',b:['Hi,',n+' wrote: "Bohat acha laga, aisi aur videos banao!"','Reply from the app.']};
+  });
+  add(10,function(i){
+    var p=pick([20,30,40,50,60,70]), k=i%5;
+    if(k===0)return{f:'ShopWise',s:'Flash sale: up to '+p+'% off',b:['Hi,','Our flash sale is live for 24 hours. Fashion, gadgets and home items up to '+p+'% off.','Free delivery on orders above Rs 2,500.']};
+    if(k===1)return{f:'ShopWise',s:'Your cart is waiting',b:['Hi,','You left something in your cart. Items sell out fast, so finish your order before they are gone.']};
+    if(k===2)return{f:'ShopWise',s:'Free delivery this weekend',b:['Hi,','Enjoy free delivery on every order this weekend. No minimum amount.']};
+    if(k===3)return{f:'ShopWise',s:'New arrivals you might like',b:['Hi,','Fresh arrivals picked for you: sneakers, backpacks and accessories.']};
+    return{f:'ShopWise',s:'Ends tonight: extra 15% off',b:['Hi,','Use code SAVE15 at checkout for an extra 15% off. Offer ends at midnight.']};
+  });
+  add(12,function(i){return{f:'CreatorLab',s:'AI Video Weekly #'+(40+i)+': '+HEADS[i%HEADS.length],b:['Hi creator,','This week in AI video and animation: '+HEADS[i%HEADS.length]+'.','We also collected three tutorials, a free preset pack and community picks of the week.','Keep creating,\nCreatorLab']};});
+  add(8,function(i){
+    if(i%2===0)return{f:'PayEasy',s:'Receipt for your payment of Rs '+num(5,45)*100,b:['Hi,','Thanks for your payment. This email is your receipt.','Transaction ID: PE'+num(10000000,99999999)]};
+    return{f:'PayEasy',s:'Your monthly statement is ready',b:['Hi,','Your statement for last month is ready to view in the app. No action is needed.']};
+  });
+  add(8,function(i){
+    if(i%2===0)return{f:'WorkBoard',s:'New gigs: video editing ('+num(3,14)+' matches)',b:['Hi,','New freelance jobs match your profile: short video editing, reel creation and simple animation.','Send proposals early; clients usually reply within a day.']};
+    return{f:'WorkBoard',s:'A client viewed your proposal',b:['Hi,','A client just viewed your proposal. Keep your profile up to date to improve your chances.']};
+  });
+  add(6,function(i){var w=WEBS[i%WEBS.length];return{f:'Commerce Club',s:'Webinar this week: '+w,b:['Hi,','Join our free webinar: '+w+'.','Thursday, 7:00 PM. A recording will be shared with everyone who registers.']};});
+  T.push({f:'Mail Team',s:'Finish setting up your new inbox',b:['Hi,','Welcome! Finish setting up your device to get the most from your inbox: turn on notifications, pick a theme and add a signature.','Enjoy your new inbox.'],welcome:1});
+
+  /* dates: shuffle, spread across ~70 days, then sort newest first */
+  shuffle(T);
+  var raw=[],d=0;
+  T.forEach(function(t){ d+=(R()<0.55?0:1); raw.push({t:t,d:d,m:num(7*60,23*60+30),u:R()}); });
+  raw.sort(function(a,b){return a.d-b.d||b.m-a.m;});
+  var NOW=new Date(), SOD=new Date(NOW.getFullYear(),NOW.getMonth(),NOW.getDate()).getTime(), NOWMIN=NOW.getHours()*60+NOW.getMinutes();
+  function stamp(d,m){ if(d===0&&m>NOWMIN)d=1; return SOD-d*864e5+m*6e4; }
+  var INBOX=raw.map(function(r,i){return{id:'e'+(i+1),from:r.t.f,subj:r.t.s,body:r.t.b,personal:!!r.t.personal,ts:stamp(r.d,r.m),un:i<16&&r.u<0.5&&!r.t.welcome,folder:'inbox'};});
+  INBOX.sort(function(a,b){return b.ts-a.ts;});
+
+  var SENT=[['Re: Assignment query','Ms. Hina Farooq','Dear Ms. Hina, thank you for the clarification. I will upload the assignment before the deadline.'],
+    ['Notes for Week 4','Hamza Ali','Bhai notes attach kar diye hain, check kar lena.'],
+    ['Group members','Prof. Imran Siddiqui','Dear Sir, our group members are listed below. Our product idea is a small online store for handmade items.'],
+    ['Cricket Sunday','Bilal Ahmed','Haan main aa raha hoon, 8 baje ground mein milte hain.'],
+    ['Thanks!','Sana Malik','Thank you so much for the photos, bohat achi aayi hain.'],
+    ['Video draft','Usman Tariq','Draft ready hai, ek dafa dekh lo aur feedback do.'],
+    ['Re: Fee voucher','Fatima Noor','Kal bank jaa raha hoon, voucher le lunga.'],
+    ['Internship application','WorkBoard Careers','Dear hiring team, I would like to apply for the digital content internship. My CV is attached.'],
+    ['Meeting link','Daniyal Shah','Link bhej raha hoon, 4 baje join kar lena.'],
+    ['Re: Eid plan','Zain Raza','Pakka, daawat mere ghar par hogi.'],
+    ['Slides final','Ayesha Khan','Final slides share kar di hain, formatting check kar lena.'],
+    ['Quiz marks issue','Ms. Hina Farooq','Dear Ms. Hina, I think question 3 was marked incorrectly. Could you please review it?']
+  ].map(function(s,i){return{id:'s'+(i+1),from:'me',to:s[1],subj:s[0],body:[s[2]],ts:stamp(1+i*5+num(0,3),num(9*60,22*60)),un:false,folder:'sent'};}).sort(function(a,b){return b.ts-a.ts;});
+  var SPAM=[['Prize Center','You have won a gift card!!!','Click now to claim your reward before it expires.'],['Follower Boost','Get 10,000 followers today','Cheap followers, limited offer. Reply to order.'],['Loan Desk','Instant cash, no documents','Get money in minutes. Apply now.'],['Lucky Draw','Congratulations, you are selected','Send your details to receive your prize.'],['Deal Hunter','Unbelievable price, buy now','Only today. Do not miss this offer.'],['Account Alert','Verify your account immediately','Your account will be closed unless you respond.']]
+    .map(function(s,i){return{id:'p'+(i+1),from:s[0],subj:s[1],body:[s[2]],ts:stamp(2+i*9,num(8*60,21*60)),un:false,folder:'spam'};});
+  var TRASH0=[['LearnHub','Last chance: course discount','The discount ends tonight.'],['ShopWise','Your cart is waiting','Items in your cart are selling fast.'],['SnapCircle','Weekly highlights','See what your friends posted this week.'],['PakMart','Rate your purchase','Tell us about your recent order.']]
+    .map(function(s,i){return{id:'t'+(i+1),from:s[0],subj:s[1],body:[s[2]],ts:stamp(4+i*11,num(8*60,21*60)),un:false,folder:'trash'};});
+
+  /* ---------- state ---------- */
+  var S={read:{},star:{},trash:{},arch:{},gone:{},sent:[],drafts:[]};
+  try{ var st=JSON.parse(ls('gm_state')||'{}'); for(var k in st)S[k]=st[k]; }catch(e){}
+  function save(){ try{ ls('gm_state',JSON.stringify(S)); }catch(e){} }
+  function isUn(m){ return m.un&&!S.read[m.id]; }
+
+  var PAL=['#1a73e8','#d93025','#188038','#e37400','#9334e6','#007b83','#c5221f','#1e8e3e','#a142f4','#e8710a','#12b5cb','#e52592'];
+  function col(s){var h=0;s=String(s);for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return PAL[h%PAL.length];}
+  function ini(s){var m=/[A-Za-z0-9]/.exec(String(s));return m?m[0].toUpperCase():'?';}
+  function dt(ts){
+    var d=new Date(ts),n=new Date();
+    if(d.toDateString()===n.toDateString()){var h=d.getHours();return (h%12||12)+':'+pad2(d.getMinutes())+' '+(h<12?'AM':'PM');}
+    if(d.getFullYear()===n.getFullYear())return MO[d.getMonth()]+' '+d.getDate();
+    return pad2(d.getMonth()+1)+'/'+pad2(d.getDate())+'/'+String(d.getFullYear()).slice(-2);
+  }
+  function dtFull(ts){var d=new Date(ts),h=d.getHours();return MO[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()+', '+(h%12||12)+':'+pad2(d.getMinutes())+' '+(h<12?'AM':'PM');}
+  function addrOf(m){
+    var n=String(m.from).toLowerCase().replace(/[^a-z0-9]+/g,m.personal?'.':'').replace(/^\.|\.$/g,'');
+    return m.personal?n+'@gmail.com':'noreply@'+n+'.com';
+  }
+  function snip(m){return (m.body||[]).join(' ').replace(/\s+/g,' ').slice(0,110);}
+
+  /* ---------- lists ---------- */
+  var cur='inbox', q='', meetOn=false;
+  var ALLP=INBOX.concat(SENT,SPAM,TRASH0);
+  function live(a){return a.filter(function(m){return !S.gone[m.id];});}
+  function folderItems(f){
+    var a=[];
+    if(f==='inbox')a=INBOX.filter(function(m){return !S.trash[m.id]&&!S.arch[m.id];});
+    else if(f==='starred')a=INBOX.concat(SENT,S.sent).filter(function(m){return S.star[m.id]&&!S.trash[m.id];});
+    else if(f==='sent')a=SENT.concat(S.sent).filter(function(m){return !S.trash[m.id];});
+    else if(f==='drafts')a=S.drafts.slice();
+    else if(f==='spam')a=SPAM.filter(function(m){return !S.trash[m.id];});
+    else if(f==='trash')a=TRASH0.concat(INBOX,SENT,S.sent,SPAM).filter(function(m){return m.folder==='trash'||S.trash[m.id];});
+    return live(a).sort(function(a,b){return b.ts-a.ts;});
+  }
+  function searchItems(s){
+    s=s.toLowerCase();
+    return live(INBOX.concat(SENT,S.sent)).filter(function(m){return !S.trash[m.id]&&(m.from+' '+(m.to||'')+' '+m.subj+' '+m.body.join(' ')).toLowerCase().indexOf(s)>-1;}).sort(function(a,b){return b.ts-a.ts;});
+  }
+  function find(id){
+    var all=ALLP.concat(S.sent,S.drafts);
+    for(var i=0;i<all.length;i++)if(all[i].id===id)return all[i];
+    return null;
+  }
+  var TITLES={inbox:'Primary',starred:'Starred',sent:'Sent',drafts:'Drafts',spam:'Spam',trash:'Trash'};
+  function rowHtml(m){
+    var un=isUn(m), on=!!S.star[m.id];
+    var who=m.folder==='drafts'?'<span style="color:#d93025">Draft</span>':esc(m.folder==='sent'?'To: '+m.to:m.from);
+    var av=m.folder==='sent'?m.to:m.from;
+    return '<div class="gm-row'+(un?' un':'')+'" data-id="'+m.id+'"><div class="gm-av" style="background:'+col(av)+'">'+esc(ini(av))+'</div>'
+      +'<div class="gm-rb"><div class="gm-l1"><span class="gm-fr">'+who+'</span><span class="gm-dt">'+dt(m.ts)+'</span></div>'
+      +'<div class="gm-l2">'+esc(m.subj||'(no subject)')+'</div>'
+      +'<div class="gm-l3"><span class="gm-sn">'+esc(snip(m))+'</span><button class="gm-st'+(on?' on':'')+'" data-star="'+m.id+'" aria-label="Star">'+svg(on?'star':'starb',22)+'</button></div></div></div>';
+  }
+  function renderList(){
+    var a=q?searchItems(q):folderItems(cur);
+    $('gm-sec').textContent=q?'Search results':TITLES[cur];
+    var h=a.map(rowHtml).join('');
+    $('gm-rows').innerHTML=h||'<div class="gm-empty">'+(q?'No results found':'Nothing in '+TITLES[cur])+'</div>';
+    $('gm-clr').style.display=q?'flex':'none';
+  }
+  function unreadCount(){return folderItems('inbox').filter(isUn).length;}
+
+  /* ---------- toast ---------- */
+  var toastT=null;
+  function toast(msg){ var t=$('gm-toast'); t.textContent=msg; t.className='on'; clearTimeout(toastT); toastT=setTimeout(function(){t.className='';},2600); }
+
+  /* ---------- history (Android back button) ---------- */
+  var pushed=0;
+  function hpush(){ try{ history.pushState({gm:1},''); pushed++; }catch(e){} }
+  function vis(id){return $(id).style.display==='flex';}
+  function closeTop(){
+    if(!mailOpen())return;
+    if($('gm-dr').classList.contains('open'))return drawer(false);
+    if(vis('gm-comp'))return closeCompose();
+    if(vis('gm-read'))return closeRead();
+    if(vis('gm-meet'))return showMeet(false);
+  }
+  var skipPop=false;
+  window.addEventListener('popstate',function(){ if(skipPop){ skipPop=false; return; } if(pushed>0)pushed--; closeTop(); });
+  function back(){ if(pushed>0)history.back(); else closeTop(); }
+
+  /* ---------- drawer ---------- */
+  function drawer(on){
+    if(on){
+      var f=[['inbox','inbox','Inbox',unreadCount()],['starred','starb','Starred',0],['sent','send','Sent',0],['drafts','draft','Drafts',S.drafts.length],['spam','warn','Spam',0],['trash','trash','Trash',0]];
+      $('gm-panel').innerHTML='<div class="gm-brand">Mail</div>'+f.map(function(x,i){
+        return (i===4?'<div class="gm-hr"></div>':'')+'<button class="gm-di'+(cur===x[0]&&!q?' on':'')+'" data-f="'+x[0]+'">'+svg(x[1],22)+'<span>'+x[2]+'</span>'+(x[3]?'<b>'+x[3]+'</b>':'')+'</button>';
+      }).join('');
+    }
+    $('gm-dr').classList.toggle('open',on);
+  }
+
+  /* ---------- views ---------- */
+  function showMeet(on){ meetOn=on; $('gm-meet').style.display=on?'flex':'none'; }
+  var openId=null;
+  function openRead(id){
+    var m=find(id); if(!m)return;
+    if(m.folder==='drafts'){ openCompose({draft:m}); return; }
+    openId=id; S.read[id]=1; save();
+    var who=m.folder==='sent'?'me':m.from, to=m.folder==='sent'?'to '+m.to:'to me';
+    $('gm-rd-body').innerHTML='<div class="gm-sub"><span>'+esc(m.subj||'(no subject)')+'</span><button class="gm-st'+(S.star[id]?' on':'')+'" id="rd-star" aria-label="Star" style="width:36px;height:36px;margin:0">'+svg(S.star[id]?'star':'starb',24)+'</button></div>'
+      +'<span class="gm-chip">'+(m.folder==='sent'?'Sent':m.folder==='spam'?'Spam':'Inbox')+'</span>'
+      +'<div class="gm-who"><div class="gm-av" style="background:'+col(who)+';margin:0">'+esc(ini(who))+'</div><div><div class="nm">'+esc(who)+'</div><div class="to">'+esc(to)+'</div></div><div class="tm">'+dtFull(m.ts)+'</div></div>'
+      +'<div class="gm-bd">'+m.body.map(function(p){return '<p>'+esc(p).replace(/\n/g,'<br>')+'</p>';}).join('')+'</div>'
+      +'<div class="gm-act"><button id="rd-reply">'+svg('reply',20)+'Reply</button><button id="rd-fwd">'+svg('fwd',20)+'Forward</button></div>';
+    $('gm-rd-body').scrollTop=0;
+    $('gm-read').style.display='flex';
+    hpush();
+    $('rd-star').onclick=function(){ toggleStar(id); this.classList.toggle('on',!!S.star[id]); this.innerHTML=svg(S.star[id]?'star':'starb',24); };
+    $('rd-reply').onclick=function(){ var t=m.folder==='sent'?m.to:addrOf(m); var qt='\n\nOn '+dtFull(m.ts)+', '+who+' wrote:\n'+m.body.join('\n').replace(/^/gm,'> '); openCompose({to:t,subj:/^re:/i.test(m.subj)?m.subj:'Re: '+m.subj,body:qt}); };
+    $('rd-fwd').onclick=function(){ openCompose({to:'',subj:/^fwd:/i.test(m.subj)?m.subj:'Fwd: '+m.subj,body:'\n\n---------- Forwarded message ----------\nFrom: '+who+'\nDate: '+dtFull(m.ts)+'\nSubject: '+m.subj+'\n\n'+m.body.join('\n')}); };
+  }
+  function closeRead(){ $('gm-read').style.display='none'; openId=null; renderList(); }
+  function toggleStar(id){ if(S.star[id])delete S.star[id]; else S.star[id]=1; save(); }
+
+  var draftId=null;
+  function openCompose(o){
+    o=o||{}; var d=o.draft;
+    if(d){ draftId=d.id; S.drafts=S.drafts.filter(function(x){return x.id!==d.id;}); save(); }
+    else draftId=null;
+    $('cp-to').value=d?d.to:(o.to||''); $('cp-sub').value=d?d.subj:(o.subj||''); $('gm-cbody').value=d?d.body.join('\n'):(o.body||'');
+    $('gm-comp').style.display='flex'; hpush();
+    setTimeout(function(){ try{ (d||o.to?$('gm-cbody'):$('cp-to')).focus(); }catch(e){} },80);
+  }
+  function composeEmpty(){ return !$('cp-to').value.trim()&&!$('cp-sub').value.trim()&&!$('gm-cbody').value.trim(); }
+  function closeCompose(){
+    if(!composeEmpty()){
+      S.drafts.push({id:draftId||('d'+Date.now()),from:'me',to:$('cp-to').value.trim(),subj:$('cp-sub').value.trim(),body:[$('gm-cbody').value],ts:Date.now(),un:false,folder:'drafts'}); save(); toast('Draft saved');
+    }
+    $('gm-comp').style.display='none'; if(vis('gm-read')){} else renderList();
+  }
+  function sendMail(){
+    var to=$('cp-to').value.trim();
+    if(!to||to.indexOf('@')<1){ toast('Add at least one recipient'); return; }
+    S.sent.push({id:'u'+Date.now(),from:'me',to:to,subj:$('cp-sub').value.trim(),body:[$('gm-cbody').value||''],ts:Date.now(),un:false,folder:'sent'}); save();
+    $('cp-to').value=$('cp-sub').value=$('gm-cbody').value=''; draftId=null;
+    $('gm-comp').style.display='none'; $('gm-read').style.display='none'; openId=null;
+    if(pushed>0){ var n=pushed; pushed=0; skipPop=true; try{ history.go(-n); }catch(e){ skipPop=false; } }
+    renderList(); toast('Sent');
+  }
+
+  /* ---------- wiring ---------- */
+  function wire(){
+    icons($('mail'));
+    $('gm-me').textContent=ini(ls('dc_name')||'M');
+    $('gm-menu').onclick=function(){ drawer(true); };
+    $('gm-scrim').onclick=function(){ drawer(false); };
+    $('gm-panel').onclick=function(e){ var b=e.target.closest('[data-f]'); if(!b)return; cur=b.getAttribute('data-f'); q=''; $('gm-q').value=''; drawer(false); renderList(); };
+    $('gm-rows').onclick=function(e){
+      var s=e.target.closest('[data-star]');
+      if(s){ var id=s.getAttribute('data-star'); toggleStar(id); var on=!!S.star[id]; s.classList.toggle('on',on); s.innerHTML=svg(on?'star':'starb',22); if(cur==='starred')renderList(); return; }
+      var r=e.target.closest('[data-id]'); if(r)openRead(r.getAttribute('data-id'));
+    };
+    $('gm-fab').onclick=function(){ openCompose(); };
+    $('gm-n-meet').onclick=function(){ showMeet(true); }; $('gm-n2-mail').onclick=function(){ showMeet(false); };
+    $('gm-n2-meet').onclick=function(){}; $('gm-n-mail').onclick=function(){ $('gm-rows').scrollTop=0; };
+    $('mt-new').onclick=function(){ toast('Meet is unavailable right now'); }; $('mt-join').onclick=function(){ toast('Meet is unavailable right now'); };
+    $('rd-back').onclick=back; $('cp-back').onclick=back;
+    $('rd-arch').onclick=function(){ if(!openId)return; S.arch[openId]=1; save(); toast('Conversation archived'); back(); };
+    $('rd-del').onclick=function(){ if(!openId)return; var m=find(openId); if(m&&(m.folder==='trash'||S.trash[openId])){ S.gone[openId]=1; toast('Deleted forever'); } else { S.trash[openId]=1; toast('Conversation moved to Trash'); } save(); back(); };
+    $('rd-unr').onclick=function(){ if(!openId)return; delete S.read[openId]; var m=find(openId); if(m&&!m.un)m.un=true; save(); toast('Marked as unread'); back(); };
+    $('rd-more').onclick=function(){ toast('No more options'); };
+    $('cp-att').onclick=function(){ toast('Attachments are not available'); };
+    $('cp-send').onclick=sendMail;
+    $('gm-q').addEventListener('input',function(){ q=this.value.trim(); renderList(); });
+    $('gm-clr').onclick=function(){ q=''; $('gm-q').value=''; renderList(); $('gm-q').focus(); };
+    $('gm-q').addEventListener('keydown',function(e){
+      if(e.key!=='Enter'&&e.keyCode!==13)return;
+      var v=normCode(this.value), inp=this;
+      if(v.length>=3&&hasCode()){ mcCheck(v,function(ok){ if(ok)unlockApp(); else inp.blur(); }); } else inp.blur();
+    });
+    $('gm-scok').onclick=function(){
+      var v=normCode($('gm-sc').value);
+      if(v.length<3){ $('gm-sc').focus(); return; }
+      mcStore(v,function(){ $('gm-setup').style.display='none'; $('gm-sc').value=''; toast('Secret code save ho gaya'); });
+    };
+    $('gm-sc').addEventListener('keydown',function(e){ if(e.key==='Enter')$('gm-scok').click(); });
+  }
+  var wired=false;
+  function reset(){
+    if(!wired){ wire(); wired=true; }
+    pushed=0; q=''; cur='inbox'; $('gm-q').value=''; try{ $('gm-q').blur(); }catch(e){}
+    ['gm-read','gm-comp','gm-meet'].forEach(function(i){ $(i).style.display='none'; });
+    openId=null; drawer(false); $('gm-dr').classList.remove('open'); $('gm-toast').className='';
+    renderList();
+    $('gm-me').textContent=ini(ls('dc_name')||'M');
+  }
+  return {reset:reset,toast:toast};
+})();
+
+/* ---------- secret code (hash + salt) ---------- */
+function normCode(s){return String(s||'').trim().toLowerCase();}
+function hasCode(){return !!ls('dc_mc');}
+function shaHex(s,cb){
+  if(window.crypto&&crypto.subtle&&window.TextEncoder){
+    crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)).then(function(buf){
+      cb(Array.from(new Uint8Array(buf)).map(function(b){return ('0'+b.toString(16)).slice(-2)}).join(''));
+    }).catch(function(){cb(hash(s));});
+  } else cb(hash(s));
+}
+function mcStore(code,cb){
+  var salt=''; for(var i=0;i<16;i++)salt+=Math.floor(Math.random()*16).toString(16);
+  shaHex('mc|'+salt+'|'+normCode(code),function(h){ ls('dc_mc',salt+':'+h); if(cb)cb(); });
+}
+function mcCheck(code,cb){
+  var st=ls('dc_mc'); if(!st)return cb(false);
+  var i=st.indexOf(':'), salt=st.slice(0,i), want=st.slice(i+1);
+  shaHex('mc|'+salt+'|'+normCode(code),function(h){ cb(h===want); });
+}
+function mcChange(){
+  if(!hasCode())return;
+  var o=prompt('Purana secret code likho'); if(o===null)return;
+  mcCheck(o,function(ok){
+    if(!ok){ alert('Galat secret code'); return; }
+    var n=prompt('Naya secret code likho (kam se kam 3 akshar)'); if(n===null)return;
+    if(normCode(n).length<3){ alert('Secret code kam se kam 3 akshar ka rakho'); return; }
+    mcStore(n,function(){ alert('Naya secret code lag gaya.'); });
+  });
+}
+
+/* ---------- app lock = mail screen ---------- */
+function mailOpen(){return $('mail').style.display==='flex';}
+function lockOn(){return true;}
+function themeBar(on){
+  var m=document.querySelector('meta[name=theme-color]'); if(!m)return;
+  if(on)m.content=(ls('dc_dark')==='1')?'#1d1e21':'#f6f8fc';
+}
+function lockNow(){
+  closeSettings();
+  var m=$('mail'); m.style.display='flex';
+  Mail.reset(); themeBar(true);
+  if(!hasCode())setTimeout(function(){ $('gm-setup').style.display='flex'; try{$('gm-sc').focus();}catch(e){} },300);
+}
+function unlockApp(){
+  $('gm-setup').style.display='none';
+  Mail.reset(); $('mail').style.display='none';
+  applyDark();
+  if(client)seenAll();
+}
+
+/* ---------- Settings page (3 dots > Settings) ---------- */
+function covEnabled(){ return ls('dc_cov')!=='0'; }
+function closeSettings(){ var o=$('setp'); if(o)o.style.display='none'; }
+function stRefresh(){ var o=$('setp'); if(o&&o.style.display==='flex')renderSettings(); }
+function vhideToggle(){
+  if(ls('dc_vhide')==='1'){ var p=prompt('Password likho'); if(p===null)return; if(p==='786'){ls('dc_vhide',null);applyVHide();} else alert('Galat password'); }
+  else { ls('dc_vhide','1'); applyVHide(); }
+}
+function clearChatAsk(){ if(confirm('Is device se saari chat saaf karein?')){all={};reacts={};hidden={};edits={};dels={};seen={};dlv={};vids={};stopPlayers();render();} }
+function stGroups(){
+  function T(ic,t,sub,on,f){return {k:'t',ic:ic,t:t,s:sub,on:on,f:f};}
+  function A(ic,t,sub,f,lbl,red){return {k:'a',ic:ic,t:t,s:sub,f:f,lbl:lbl,red:red};}
+  var sec=[], idle=idleSecs();
+  sec.push(A('📧','Abhi mail screen par jao','Chat chhup jayegi, sirf inbox nazar aaye gi',function(){closeSettings();lockNow();},'Mail'));
+  sec.push(A('🔑','Mail secret code badlo','Mail ke Search bar mein jo code likhte ho (Enter dabane par chat khulti hai)',mcChange,'Badlo'));
+  sec.push(T('🔎','Search secret code','Minimize par chat emoji ban jaye, Search mein code likhne par wapas aaye',sqSet(),function(){ if(sqSet())askOldSq(function(){ls('dc_sq',null);maskApply(false);alert('Secret code hata diya');}); else setSq(); }));
+  if(sqSet()){
+    sec.push(A('🔑','Search secret code badlo','',function(){askOldSq(setSq);},'Badlo'));
+    sec.push(A('😀','Chat abhi emoji karo','',function(){closeSettings();maskApply(true);},'Emoji'));
+  }
+  sec.push(T('⬛','Recent apps mein kaali screen','App minimize karne par 3-line preview kaala dikhe',covEnabled(),function(){ ls('dc_cov',covEnabled()?'0':'1'); }));
+  sec.push(T('🕶','Auto black screen','Kuch na chhoo to screen kaali ho jaye, tap par wapas',idle>0,function(){ ls('dc_idle',idle>0?'0':'10'); idleBump(); }));
+  if(idle>0)sec.push({k:'s',vals:[2,5,10,30],cur:idle,f:function(v){ ls('dc_idle',String(v)); idleBump(); }});
+  sec.push(T('📵','Video / Voice call button chupao','Header se call ke icon hata do (password se wapas aate hain)',ls('dc_vhide')==='1',vhideToggle));
+  return [
+    ['Privacy aur Security',sec],
+    ['Notifications',[
+      T('🔔','Notification','App minimize ho to naye message par notification',notifOn(),function(){ if(notifOn())ls('dc_notif',null); else enableNotif(); }),
+      T('📲','Band app par notification','App band hone par bhi push (ntfy)',ntfyOn(),function(){ ls('dc_ntfy',ntfyOn()?'0':'1'); if(ntfyOn())ntfyGuide(); }),
+      A('✏️','Push ka title aur text badlo','Dost ko jo notification mile uska title/text (abhi: '+(ls('dc_ntitle')||'Mail')+' / '+(ls('dc_nmsg')||'New email')+')',function(){
+        var a=prompt('Notification ka title likho',ls('dc_ntitle')||'Mail'); if(a===null)return;
+        var b=prompt('Notification ka text likho',ls('dc_nmsg')||'New email'); if(b===null)return;
+        ls('dc_ntitle',a.trim()||null); ls('dc_nmsg',b.trim()||null);
+      }),
+      A('🔗','ntfy topic / setup','Apna topic dekho aur subscribe karo',ntfyGuide,'Dekho')
+    ]],
+    ['Connection',[
+      T('🔆','Screen on rakho','Chat khuli ho to screen band na ho (connection na toote)',wakeOn(),wakeToggle)
+    ]],
+    ['Calls aur Media',[
+      A('🎤','Mic / Camera ijazat check','Mic ya camera na chale to yahan se check karo',permCheck,'Check')
+    ]],
+    ['Display',[
+      T('🌙','Dark mode','',ls('dc_dark')==='1',function(){ ls('dc_dark',ls('dc_dark')==='1'?'0':'1'); applyDark(); })
+    ]],
+    ['Chat',[
+      A('🚪','Chat code badlo','Doosre chat code mein jao',function(){location.reload();},'Badlo'),
+      A('🧹','Chat saaf karo','Sirf is device se saari chat hatao',clearChatAsk,'Saaf',true)
+    ]]
+  ];
+}
+function renderSettings(){
+  var o=$('setp'), old=o.querySelector('.sb'), top=old?old.scrollTop:0;
+  o.textContent='';
+  var h=document.createElement('div'); h.className='sh';
+  var bk=document.createElement('button'); bk.textContent='←'; bk.onclick=closeSettings;
+  var tt=document.createElement('b'); tt.textContent='Settings';
+  h.appendChild(bk); h.appendChild(tt); o.appendChild(h);
+  var body=document.createElement('div'); body.className='sb';
+  stGroups().forEach(function(g){
+    var hd=document.createElement('h4'); hd.textContent=g[0]; body.appendChild(hd);
+    var card=document.createElement('div'); card.className='card';
+    g[1].forEach(function(it){
+      if(it.k==='s'){
+        var sg=document.createElement('div'); sg.className='seg';
+        it.vals.forEach(function(v){ var sp=document.createElement('span'); sp.textContent=v+' sec'; if(v===it.cur)sp.className='a'; sp.onclick=function(){ it.f(v); renderSettings(); }; sg.appendChild(sp); });
+        card.appendChild(sg); return;
+      }
+      var r=document.createElement('div'); r.className='row'+(it.red?' red':'');
+      var ic=document.createElement('span'); ic.className='ic'; ic.textContent=it.ic;
+      var tx=document.createElement('div'); tx.className='tx';
+      var b=document.createElement('b'); b.textContent=it.t; tx.appendChild(b);
+      if(it.s){ var sm=document.createElement('small'); sm.textContent=it.s; tx.appendChild(sm); }
+      r.appendChild(ic); r.appendChild(tx);
+      var pb=document.createElement('div');
+      if(it.k==='t'){ pb.className='pb'+(it.on?' on':''); pb.textContent=it.on?'ON':'OFF'; }
+      else { pb.className='pb act'; pb.textContent=it.lbl||'Kholo'; }
+      r.appendChild(pb);
+      r.onclick=function(){ try{ it.f(); }catch(e){} renderSettings(); };
+      card.appendChild(r);
+    });
+    body.appendChild(card);
+  });
+  o.appendChild(body); body.scrollTop=top;
+}
+function openSettings(){ hideMenu(); renderSettings(); $('setp').style.display='flex'; }
+$('more').onclick=function(e){
+  e.stopPropagation();
+  var items=[{t:'⚙️ Settings',f:openSettings}];
+  showMenu(items,$('more').getBoundingClientRect());
+};
+
+/* ---------- mobile privacy wipe + auto lock ---------- */
+var isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+/* chat ab delete nahi hoti, minimize par sirf emoji ban jati hai (agar secret code laga ho) */
+/* ---------- recent apps (3-line) mein kaali screen ---------- */
+var coverT=null, coverAt=0, coverEdge=false;
+function coverOn(why){
+  if(!covEnabled()&&!idleHold)return;
+  var was=$('cover').style.display==='block';
+  if(why==='edge'){ if(!was)coverEdge=true; } else coverEdge=false;
+  $('cover').style.display='block'; coverAt=Date.now();
+  /* sirf "edge swipe shuru hua par app wahin rahi" wali soorat mein khud wapas khule; baaki soorat mein sirf asal wapsi (focus/tap) par */
+  if(!coverT)coverT=setInterval(function(){
+    if(idleHold||!coverEdge)return;
+    if(document.visibilityState==='visible'&&document.hasFocus()&&Date.now()-coverAt>900)coverOff();
+  },300);
+}
+function coverOff(){
+  idleHold=false; coverEdge=false; idleBump();
+  $('cover').style.display='none';
+  if(coverT){clearInterval(coverT);coverT=null;}
+}
+/* neeche se ungli swipe up (gesture navigation) shuru hote hi pehle se kaala kar do */
+(function(){
+  var edge=false, y0=0;
+  window.addEventListener('touchstart',function(e){ var t=e.touches[0]; edge=!!t&&t.clientY>=innerHeight-18; y0=t?t.clientY:0; },{passive:true,capture:true});
+  window.addEventListener('touchmove',function(e){ if(!edge)return; var t=e.touches[0]; if(t&&y0-t.clientY>10){ edge=false; coverOn('edge'); } },{passive:true,capture:true});
+  window.addEventListener('touchcancel',function(){ if(edge){ edge=false; coverOn('edge'); } },{passive:true,capture:true});
+})();
+$('cover').addEventListener('pointerdown',function(){ if(document.visibilityState==='visible')coverOff(); });
+window.addEventListener('blur',coverOn);
+window.addEventListener('focus',function(){ if(document.visibilityState==='visible')coverOff(); });
+window.addEventListener('pageshow',function(){ if(document.visibilityState==='visible')coverOff(); });
+document.addEventListener('visibilitychange',function(){ if(document.hidden){coverOn();hideChat();lockNow();} else { coverOff(); if(!mailOpen())seenAll(); } });
+window.addEventListener('pagehide',function(){coverOn();hideChat();lockNow();});
+/* ---------- connection kabhi na tootay (auto reconnect) ---------- */
+var hiddenAt=0;
+function dropSock(){ try{ client.stream.destroy(); }catch(e){ try{ client.reconnect(); }catch(_){} } }
+function kickConn(force){
+  if(!client)return;
+  try{
+    if(client.connected){ if(force)dropSock(); else presPing(); }
+    else if(!client.reconnecting){ client.reconnect(); }
+  }catch(e){}
+}
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){ hiddenAt=Date.now(); }
+  else { kickConn(Date.now()-hiddenAt>15000); wakeAsk(); }
+});
+window.addEventListener('online',function(){ kickConn(true); });
+window.addEventListener('focus',function(){ if(client&&!client.connected)kickConn(false); });
+setInterval(function(){ if(client&&!client.connected&&!document.hidden)kickConn(false); },8000);
+
+/* ---------- screen on rakho (optional) ---------- */
+var wl=null;
+function wakeOn(){ return ls('dc_wake')==='1'; }
+function wakeAsk(){
+  try{
+    if(wakeOn()&&navigator.wakeLock&&!document.hidden&&!wl){
+      navigator.wakeLock.request('screen').then(function(l){ wl=l; l.addEventListener('release',function(){wl=null;}); }).catch(function(){});
+    }
+  }catch(e){}
+}
+function wakeToggle(){
+  if(wakeOn()){ ls('dc_wake',null); try{ if(wl)wl.release(); }catch(e){} wl=null; alert('Screen on rakhna band kar diya.'); }
+  else { ls('dc_wake','1'); wakeAsk(); alert('Ab chat khuli ho to phone ki screen band nahi hogi, is se connection nahi tootay ga. (Battery zyada lagti hai. Auto black screen saath on rakho.)'); }
+}
+
+/* ---------- auto black screen (kuch na chhoo to) ---------- */
+var idleHold=false, idleT=null;
+function idleSecs(){ var v=ls('dc_idle'); return v===''?10:(parseInt(v,10)||0); }
+function idleBump(){
+  if(idleT){ clearTimeout(idleT); idleT=null; }
+  var n=idleSecs(); if(!n)return;
+  idleT=setTimeout(idleFire,n*1000);
+}
+function idleFire(){
+  idleT=null;
+  if($('chat').style.display!=='flex'||document.hidden)return;
+  if((typeof rec!=='undefined'&&rec)||(typeof pc!=='undefined'&&pc)||$('callview').style.display==='block'){ idleBump(); return; }
+  idleHold=true; coverOn();
+}
+function idleCycle(){
+  var order=[5,10,30,0], cur=idleSecs(), i=order.indexOf(cur), nx=order[(i+1)%order.length];
+  ls('dc_idle',String(nx)); idleBump();
+  alert(nx?('Ab '+nx+' second kuch na chhoo to screen kaali ho jaye gi. Dobara dekhne ke liye screen par tap karo.'):'Auto black screen band kar di.');
+}
+['pointerdown','pointermove','touchstart','keydown','input','scroll','wheel'].forEach(function(ev){
+  window.addEventListener(ev,function(){ if(!idleHold)idleBump(); },{passive:true,capture:true});
+});
+document.addEventListener('freeze',function(){ coverOn(); });
+idleBump();
+
+/* ---------- mic / camera ijazat (asli wajah batata hai) ---------- */
+function permHelp(cam){
+  var w=cam?'Camera':'Mic';
+  return w+' ki ijazat band hai. Is tarah kholo:\n\n'+
+   '1) Chrome: address bar mein link ke left wale icon par dabao > Permissions > '+w+' > Allow, phir page reload karo.\n'+
+   '2) Home Screen wali app ho to: app icon par long-press > App info > Permissions > '+w+' > Allow.\n'+
+   '3) iPhone: Settings > Safari > '+w+' > Allow.\n'+
+   '4) Facebook/WhatsApp ke andar wale browser mein mic/camera nahi chalta. Link ko Chrome ya Safari mein kholo.';
+}
+function mediaErr(e,cam){
+  var n=(e&&e.name)||'';
+  if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)
+    return 'Mic/camera sirf https link par chalta hai, aur Facebook/WhatsApp ke andar wale browser mein nahi chalta. Link ko Chrome ya Safari mein kholo.';
+  if(n==='NotAllowedError'||n==='PermissionDeniedError'||n==='SecurityError') return permHelp(cam);
+  if(n==='NotFoundError'||n==='DevicesNotFoundError') return (cam?'Camera ya mic':'Mic')+' nahi mila. Check karo ke phone ka mic/camera theek hai.';
+  if(n==='NotReadableError'||n==='TrackStartError'||n==='AbortError') return 'Mic/camera koi doosri app use kar rahi hai. Wo app band karo aur dobara try karo.';
+  return 'Mic/camera shuru nahi ho saka ('+(n||'error')+').';
+}
+function askMedia(wantCam){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) return Promise.reject({name:'NoMedia'});
+  return navigator.mediaDevices.getUserMedia({audio:true,video:wantCam?{facingMode:'user'}:false}).catch(function(e){
+    if(e&&(e.name==='OverconstrainedError'||e.name==='ConstraintNotSatisfiedError'||e.name==='TypeError'))
+      return navigator.mediaDevices.getUserMedia({audio:true,video:!!wantCam});
+    throw e;
+  });
+}
+async function permCheck(){
+  var msg=[];
+  try{ var a=await navigator.mediaDevices.getUserMedia({audio:true}); a.getTracks().forEach(function(t){t.stop()}); msg.push('Mic: theek hai'); }
+  catch(e){ msg.push('Mic: '+mediaErr(e,false)); }
+  try{ var v=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}); v.getTracks().forEach(function(t){t.stop()}); msg.push('Camera: theek hai'); }
+  catch(e){ msg.push('Camera: '+mediaErr(e,true)); }
+  alert(msg.join('\n\n'));
+}
+
+/* ---------- mobile notification ---------- */
+var pushedIds={};
+function notifOn(){ try{ return ls('dc_notif')==='1' && ('Notification' in window) && Notification.permission==='granted'; }catch(e){ return false; } }
+function showNotif(body,tag){
+  if(!notifOn())return;
+  if(!document.hidden && document.hasFocus())return;   /* app saamne khula ho to notification nahi */
+  var opt={body:body,tag:tag,renotify:true,icon:'icon-192.png',badge:'icon-192.png',vibrate:[120,60,120]};
+  try{
+    if('serviceWorker' in navigator && navigator.serviceWorker.ready){
+      navigator.serviceWorker.ready.then(function(r){ r.showNotification('Mail',opt); }).catch(function(){ try{new Notification('Mail',opt);}catch(e){} });
+    } else new Notification('Mail',opt);
+  }catch(e){}
+}
+function notifyMsg(d){ showNotif('New email','dc-msg'); }
+function notifyCall(d){ showNotif(d&&d.voice?'Voice call aa rahi hai':'Video call aa rahi hai','dc-call'); }
+function enableNotif(){
+  if(!('Notification' in window)){ alert('Is browser mein notification support nahi hai. iPhone par pehle app ko Home Screen par add karo.'); return; }
+  Notification.requestPermission().then(function(p){
+    if(p==='granted'){ ls('dc_notif','1'); alert('Notification on ho gayi. App minimize hone par naya message aane par phone par notification aayegi.'); }
+    else alert('Ijazat nahi mili. Phone Settings > Apps > Mail > Notifications on karo.');
+    try{stRefresh();}catch(e){}
+  });
+}
+
+/* ---------- band app par push (ntfy.sh, optional) ---------- */
+function ntfyOn(){ return ls('dc_ntfy')!=='0'; }
+function ntfyTopic(name,cb){
+  var s='dc-ntfy|'+ls('dc_room')+'|'+String(name||'').trim().toLowerCase();
+  function fallback(){ cb('dc'+hash(s)+hash(s+'2')+hash(s+'3')); }
+  if(window.crypto&&crypto.subtle&&window.TextEncoder){
+    crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)).then(function(buf){
+      var h=Array.from(new Uint8Array(buf)).map(function(b){return ('0'+b.toString(16)).slice(-2)}).join('');
+      cb('dc'+h.slice(0,30));
+    }).catch(fallback);
+  } else fallback();
+}
+function peerNameNow(){
+  var key='dc_peer|'+ls('dc_room'), n='';
+  if(peer&&peer.name)n=peer.name;
+  else{
+    var best=null;
+    Object.keys(all).forEach(function(i){ var m=all[i]; if(m&&m.cid!==cid&&m.name&&(!best||m.ts>best.ts))best=m; });
+    if(best)n=best.name;
+  }
+  if(n){ ls(key,n); return n; }
+  return ls(key);   /* pehle kabhi dost ka naam dekha ho to wohi (1 saal baad bhi chalega) */
+}
+function relayText(text,id){
+  if(!ntfyOn())return;
+  if(id){ if(pushedIds[id])return; pushedIds[id]=1; }
+  var pn=peerNameNow(); if(!pn)return;
+  ntfyTopic(pn,function(t){
+    var base0=location.origin+location.pathname.replace(/[^\/]*$/,'');
+    var q='?priority=5&title='+encodeURIComponent(ls('dc_ntitle')||'Mail')+'&icon='+encodeURIComponent(base0+'icon-192.png')+'&click='+encodeURIComponent(location.origin+location.pathname);
+    try{ fetch('https://ntfy.sh/'+t+q,{method:'POST',body:text,mode:'no-cors',keepalive:true}).catch(function(){}); }catch(e){}
+  });
+}
+function relayPush(raw){
+  if(!ntfyOn())return;
+  var d; try{ d=JSON.parse(raw); }catch(e){ return; }
+  if(!d||!d.id||d.cid!==cid)return;
+  relayText(ls('dc_nmsg')||'New email',d.id);
+}
+function ntfyCopy(t,btn){
+  try{ navigator.clipboard.writeText(t).then(function(){btn.textContent='Copy ho gaya ✔';}); }
+  catch(e){ prompt('Topic copy karo:',t); }
+}
+function ntfyGuide(){
+  ntfyTopic(myName,function(t){
+    var o=document.createElement('div');
+    o.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.65);z-index:99998;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto';
+    var b=document.createElement('div');
+    b.style.cssText='background:#fff;color:#111;border-radius:14px;padding:18px;max-width:380px;width:100%;font:15px/1.5 sans-serif';
+    b.innerHTML='<div style="font-weight:700;font-size:17px;margin-bottom:8px">📲 App band ho tab bhi notification</div>'
+      +'<div>1) Phone mein <b>ntfy</b> app install karo (Play Store / App Store).<br>2) Neeche wala hara button dabao, ya ntfy mein ye topic subscribe karo:</div>'
+      +'<div style="background:#eee;border-radius:8px;padding:8px;margin:8px 0;word-break:break-all;font-family:monospace;font-size:13px">'+t+'</div>'
+      +'<a href="ntfy://ntfy.sh/'+t+'" style="display:block;text-align:center;background:#008069;color:#fff;padding:11px;border-radius:10px;text-decoration:none;font-weight:700;margin-bottom:8px">ntfy app mein subscribe karo</a>'
+      +'<div style="display:flex;gap:8px"><button id="ntfyCp" style="flex:1;padding:10px;border:0;border-radius:10px;background:#e3e3e3;font-size:14px">Topic copy</button><button id="ntfyX" style="flex:1;padding:10px;border:0;border-radius:10px;background:#e3e3e3;font-size:14px">Band karo</button></div>'
+      +'<div style="font-size:13px;color:#555;margin-top:10px">⚠️ Ye sab <b>dost ke phone par bhi</b> karna hai (uska apna topic banega). Android par ntfy ko Battery &gt; Unrestricted de do. Notification mein sirf “Naya message” aata hai, chat ka text nahi.</div>';
+    o.appendChild(b); document.body.appendChild(o);
+    b.querySelector('#ntfyCp').onclick=function(){ntfyCopy(t,this)};
+    b.querySelector('#ntfyX').onclick=function(){ document.body.removeChild(o); };
+  });
+}
+function ntfySetup(){ ntfyGuide(); }
+function ntfyToggle(){
+  if(ntfyOn()){ ls('dc_ntfy','0'); alert('Band app push band kar di.'); }
+  else { ls('dc_ntfy','1'); alert('Band app push on ho gayi.'); ntfyGuide(); }
+}
+function ntfyFirstRun(){ if(!ls('dc_ntfy_seen')&&ntfyOn()){ ls('dc_ntfy_seen','1'); ntfyGuide(); } }
+
+if('serviceWorker' in navigator){
+  var hadSW=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(reg){
+    reg.update().catch(function(){});
+    document.addEventListener('visibilitychange',function(){ if(!document.hidden)reg.update().catch(function(){}); });
+    setInterval(function(){ reg.update().catch(function(){}); },300000);
+  }).catch(function(){});
+  navigator.serviceWorker.addEventListener('controllerchange',function(){
+    /* naya version aaya: call/recording na ho to khud reload */
+    if(!hadSW){hadSW=true;return;}
+    if(pc||rec)return;
+    location.reload();
+  });
+}
+$('go').onclick=start;
+var EMOJIS='😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 😉 😍 🥰 😘 😋 😎 🤩 🥳 😏 😒 😞 😔 😢 😭 😤 😡 🤯 😱 😴 🤔 🙄 😬 🤗 🙏 👍 👎 👏 🙌 💪 👌 🤝 ❤️ 💔 🔥 ✨ 🎉 🎂 🌹 ☕ 🍕 🙈 😜 🤪 🥺 😌 😷 🤒';
+var emp=$('emp'); EMOJIS.split(' ').forEach(function(e){var sp=document.createElement('span');sp.textContent=e;sp.onclick=function(){$('in').value+=e;updIcon();};emp.appendChild(sp);});
+$('emo').onclick=function(){emp.style.display=emp.style.display==='grid'?'none':'grid'};
+$('att').onclick=function(){ if(client&&client.connected)$('fi').click(); };
+$('fi').onchange=function(){
+  var f=this.files[0]; this.value=''; if(!f)return;
+  if(/^video\//.test(f.type)){ sendVideoFile(f); return; }
+  var img=new Image(),u=URL.createObjectURL(f);
+  img.onload=function(){
+    var k=Math.min(1,900/Math.max(img.width,img.height)),c=document.createElement('canvas');
+    c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(u);
+    sendImage(c.toDataURL('image/jpeg',.6));
+  };
+  img.src=u;
+};
+$('iv').onclick=function(){this.style.display='none'};
+function applyDark(){ var on=ls('dc_dark')==='1'; document.body.classList.toggle('dark',on); document.querySelector('meta[name=theme-color]').content=on?'#202c33':'#008069'; }
+if(!ls('dc_dark'))ls('dc_dark',(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'1':'0');
+
+/* ---------- video call (WebRTC, signaling over MQTT) ---------- */
+var pc=null, localStream=null, callPeerCid=null, callPeerName='', pendingOffer=null, micOn=true, camOn=true, callTimer=null;
+var RTC_CFG={iceServers:[
+  {urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']},
+  {urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp','turns:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}
+]};
+var iceQ=[];
+function addIce(c){
+  if(pc&&pc.remoteDescription&&pc.remoteDescription.type)pc.addIceCandidate(c).catch(function(){});
+  else iceQ.push(c);
+}
+function flushIce(){
+  var q=iceQ; iceQ=[];
+  q.forEach(function(c){ try{pc.addIceCandidate(c).catch(function(){});}catch(e){} });
+}
+function rtcSend(d){ if(client&&client.connected)client.publish(base+'/rtc',JSON.stringify(d),{qos:1}); }
+function newPc(){
+  var p=new RTCPeerConnection(RTC_CFG);
+  p.onicecandidate=function(e){ if(e.candidate) rtcSend({kind:'ice',cid:cid,candidate:e.candidate}); };
+  p.ontrack=function(e){
+    var rv=$('remoteV'); rv.srcObject=e.streams[0];
+    var pl=rv.play(); if(pl&&pl.catch)pl.catch(function(){});
+  };
+  p.oniceconnectionstatechange=function(){
+    var s=p.iceConnectionState;
+    if(s==='connected'||s==='completed'){ setCallState('Connected'); var rv=$('remoteV'); var pl=rv.play(); if(pl&&pl.catch)pl.catch(function(){}); }
+    else if(s==='checking')setCallState('Jud raha hai…');
+  };
+  p.onconnectionstatechange=function(){ if(p.connectionState==='failed'||p.connectionState==='disconnected')endCall(true); };
+  return p;
+}
+function setCallState(t){ $('callstate').textContent=t; }
+async function getMedia(voice){
+  try{ localStream=await askMedia(!voice); }
+  catch(e){
+    if(!voice && e && e.name!=='NoMedia'){   /* camera na chale to sirf awaz se call */
+      localStream=await askMedia(false);
+      alert('Camera nahi chala, isliye sirf awaz se call ho rahi hai.\n\n'+mediaErr(e,true));
+    } else throw e;
+  }
+  $('localV').srcObject=localStream;
+}
+async function startCall(voice){
+  voice=(voice===true);
+  if(!client||!client.connected){alert('Pehle chat connect ho jaye.');return;}
+  try{ await getMedia(voice); }catch(e){ alert(mediaErr(e,!voice)); return; }
+  pc=newPc();
+  localStream.getTracks().forEach(function(t){pc.addTrack(t,localStream)});
+  $('cv-cam').style.display=voice?'none':'';
+  iceQ=[]; callPeerCid=null; callPeerName=peer?peer.name:'';
+  $('callview').style.display='block'; setCallState('Call ho rahi hai…');
+  var offer=await pc.createOffer(); await pc.setLocalDescription(offer);
+  rtcSend({kind:'offer',cid:cid,name:myName,voice:voice,sdp:offer}); relayText(voice?'Voice call aa rahi hai':'Video call aa rahi hai');
+}
+function rtcHandle(d){
+  if(d.kind==='offer'){
+    if(pc){ rtcSend({kind:'busy',cid:cid,to:d.cid}); return; }
+    iceQ=[]; pendingOffer=d; callPeerCid=d.cid; callPeerName=d.name||'Dost';
+    $('rb-name').textContent=callPeerName; $('rb-sm').textContent=d.voice?'Voice call aa rahi hai':'Video call aa rahi hai'; $('rb-acc').textContent=d.voice?'📞':'📹'; $('ringbar').style.display='flex'; notifyCall(d);
+  }
+  else if(d.kind==='answer'){ if(pc&&callPeerCid===null){ callPeerCid=d.cid; pc.setRemoteDescription(d.sdp).then(flushIce).catch(function(){}); } }
+  else if(d.kind==='ice'){ if(callPeerCid===d.cid||callPeerCid===null) addIce(d.candidate); }
+  else if(d.kind==='end'){ if(pc||pendingOffer) endCall(true); }
+  else if(d.kind==='busy'){ if(d.to===cid) endCall(true); }
+}
+async function acceptCall(){
+  $('ringbar').style.display='none'; var off=pendingOffer; pendingOffer=null;
+  if(!off)return;
+  try{ await getMedia(!!off.voice); }catch(e){ alert(mediaErr(e,!off.voice)); rtcSend({kind:'end',cid:cid}); return; }
+  pc=newPc();
+  localStream.getTracks().forEach(function(t){pc.addTrack(t,localStream)});
+  $('cv-cam').style.display=off.voice?'none':'';
+  $('callview').style.display='block'; setCallState('Jud raha hai…');
+  await pc.setRemoteDescription(off.sdp);
+  flushIce();
+  var ans=await pc.createAnswer(); await pc.setLocalDescription(ans);
+  rtcSend({kind:'answer',cid:cid,sdp:ans});
+}
+function declineCall(){ $('ringbar').style.display='none'; if(pendingOffer)rtcSend({kind:'end',cid:cid}); pendingOffer=null; callPeerCid=null; }
+function endCall(remoteEnded){
+  if(pc){ try{pc.close()}catch(e){} pc=null; }
+  if(localStream){ localStream.getTracks().forEach(function(t){t.stop()}); localStream=null; }
+  $('remoteV').srcObject=null; $('localV').srcObject=null;
+  $('callview').style.display='none'; $('ringbar').style.display='none';
+  if(!remoteEnded && callPeerCid!==undefined) rtcSend({kind:'end',cid:cid});
+  callPeerCid=null; pendingOffer=null; micOn=true; camOn=true;
+  $('cv-mic').className=''; $('cv-cam').className=''; $('cv-cam').style.display='';
+}
+$('emob').onclick=function(){
+  if(maskOn)return;
+  if(!sqSet()){ setSq(); if(!sqSet())return; }
+  closeSettings(); maskApply(true);
+};
+$('clrb').onclick=function(){ clearChatAsk(); };
+$('vcall').onclick=function(){startCall(false)};
+$('acall').onclick=function(){startCall(true)};
+$('rb-acc').onclick=acceptCall;
+$('rb-dec').onclick=declineCall;
+$('cv-end').onclick=function(){endCall(false)};
+$('cv-mic').onclick=function(){ micOn=!micOn; if(localStream)localStream.getAudioTracks().forEach(function(t){t.enabled=micOn}); this.className=micOn?'':'off'; };
+$('cv-cam').onclick=function(){ camOn=!camOn; if(localStream)localStream.getVideoTracks().forEach(function(t){t.enabled=camOn}); this.className=camOn?'':'off'; };
+
+
+/* ---------- video bhejna (chhoti video, 30 second tak) ---------- */
+var vids={};
+function vcPart(p){
+  if(!p||!p.id||p.cid===cid)return;
+  var m=all[p.id]; if(m&&m.video)return;
+  var o=vids[p.id]||(vids[p.id]={n:p.n,parts:{},c:0});
+  if(o.parts[p.i]===undefined){o.parts[p.i]=p.d;o.c++;}
+  vidDone(p.id);
+}
+function vidDone(id){
+  var o=vids[id],m=all[id]; if(!o||!m||o.c<o.n)return;
+  var s=''; for(var i=0;i<o.n;i++){ if(o.parts[i]===undefined)return; s+=o.parts[i]; }
+  m.video=s; delete vids[id]; render(true);
+}
+function sendVideo(dataUrl,dur){
+  var id=Date.now().toString(36)+Math.random().toString(36).slice(2,6), SZ=60000, n=Math.ceil(dataUrl.length/SZ);
+  var msg={id:id,cid:cid,name:myName,text:'🎥 Video',video:dataUrl,vn:n,dur:Math.round(dur),ts:Date.now()};
+  if(replyTo)msg.reply={id:replyTo.id,cid:replyTo.cid,name:replyTo.name,text:clip(replyTo.text,120)};
+  replyTo=null; updateBar();
+  merge([msg]); $('msgs').scrollTop=$('msgs').scrollHeight;
+  if(!client||!client.connected)return;
+  var meta={}; Object.keys(msg).forEach(function(k){ if(k!=='video')meta[k]=msg[k]; });
+  client.publish(base+'/msg',JSON.stringify(meta),{qos:1});
+  var i=0;
+  (function next(){
+    if(i>=n||!client||!client.connected)return;
+    client.publish(base+'/vc',JSON.stringify({id:id,cid:cid,i:i,n:n,d:dataUrl.substr(i*SZ,SZ)}),{qos:1});
+    i++; setTimeout(next,40);
+  })();
+}
+function sendVideoFile(f){
+  var vid=document.createElement('video'), u=URL.createObjectURL(f);
+  vid.preload='auto'; vid.playsInline=true; vid.src=u;
+  vid.onerror=function(){ URL.revokeObjectURL(u); alert('Ye video khul nahi saki.'); };
+  vid.onloadedmetadata=function(){
+    if(!isFinite(vid.duration)||vid.duration>30){ URL.revokeObjectURL(u); alert('Video 30 second se chhoti rakho.'); return; }
+    if(typeof MediaRecorder==='undefined'){ URL.revokeObjectURL(u); alert('Is browser mein video bhejna support nahi.'); return; }
+    compressVideo(vid,u);
+  };
+}
+function compressVideo(vid,u){
+  var btn=$('att'); btn.textContent='⏳'; btn.disabled=true;
+  var k=Math.min(1,360/Math.min(vid.videoWidth,vid.videoHeight)), cw=Math.max(2,Math.round(vid.videoWidth*k/2)*2), ch=Math.max(2,Math.round(vid.videoHeight*k/2)*2);
+  var c=document.createElement('canvas'); c.width=cw; c.height=ch; var g=c.getContext('2d');
+  var stream=c.captureStream(24), ac=null, tm=null, iv=null, finished=false, chunks=[];
+  try{
+    ac=new (window.AudioContext||window.webkitAudioContext)(); ac.resume();
+    var src=ac.createMediaElementSource(vid), dst=ac.createMediaStreamDestination(); src.connect(dst);
+    dst.stream.getAudioTracks().forEach(function(t){stream.addTrack(t)});
+  }catch(e){}
+  var mt=''; ['video/webm;codecs=vp8,opus','video/webm;codecs=vp9,opus','video/webm','video/mp4'].forEach(function(t){ if(!mt&&MediaRecorder.isTypeSupported(t))mt=t; });
+  var mr;
+  try{ mr=new MediaRecorder(stream,mt?{mimeType:mt,videoBitsPerSecond:250000,audioBitsPerSecond:32000}:{videoBitsPerSecond:250000}); }
+  catch(e){ btn.textContent='📎'; btn.disabled=false; URL.revokeObjectURL(u); alert('Video taiyar nahi ho saki.'); return; }
+  function reset(){ btn.textContent='📎'; btn.disabled=false; clearInterval(iv); clearTimeout(tm); URL.revokeObjectURL(u); try{ac&&ac.close()}catch(e){} }
+  mr.ondataavailable=function(e){ if(e.data&&e.data.size)chunks.push(e.data); };
+  mr.onstop=function(){
+    reset();
+    var blob=new Blob(chunks,{type:mr.mimeType||'video/webm'});
+    if(blob.size>2e6){ alert('Video bohot bari hai. Chhoti video bhejo.'); return; }
+    var fr=new FileReader(); fr.onload=function(){ sendVideo(fr.result,vid.duration); }; fr.readAsDataURL(blob);
+  };
+  function finish(){ if(finished)return; finished=true; try{vid.pause()}catch(e){} try{mr.stop()}catch(e){ reset(); } }
+  vid.onended=finish;
+  tm=setTimeout(finish,(vid.duration+4)*1000);
+  mr.start(500);
+  vid.play().then(function(){ iv=setInterval(function(){ try{g.drawImage(vid,0,0,cw,ch)}catch(e){} },42); }).catch(function(){ finished=true; try{mr.stop()}catch(e){} reset(); alert('Video chalane ki ijazat nahi mili.'); });
+}
+
+/* ---------- hide video call (password 786) ---------- */
+function applyVHide(){ var h=ls('dc_vhide')==='1'?'none':''; $('vcall').style.display=h; $('acall').style.display=h; }
+
+/* ---------- keyboard overlap fix ---------- */
+(function(){
+  var vv=window.visualViewport;
+  function fix(){
+    if(!vv)return;
+    document.body.style.height=vv.height+'px';
+    window.scrollTo(0,0);
+    var box=$('msgs'); if(box)box.scrollTop=box.scrollHeight;
+  }
+  if(vv){ vv.addEventListener('resize',fix); vv.addEventListener('scroll',fix); }
+  $('in').addEventListener('focus',function(){ setTimeout(fix,250); setTimeout(fix,500); });
+  $('in').addEventListener('blur',function(){ document.body.style.height=''; });
+})();
+
+applyVHide();
+applyDark();
+updIcon();
+lockNow();
+</script>
+</body>
+</html>
