@@ -342,7 +342,9 @@ body.dark #gm-setup button{color:#062e6f}
     <div class="pill"><button id="emo" aria-label="Emoji">😊</button><input id="in" placeholder="Message likho…" autocomplete="off"><button id="att" aria-label="Photo">📎</button></div>
     <button id="send">➤</button>
   </footer>
-  <input type="file" id="fi" accept="image/*,video/*" hidden>
+  <input type="file" id="fi" accept="image/*" hidden>
+  <input type="file" id="fv" accept="video/*" hidden>
+  <input type="file" id="fc" accept="image/*" capture="environment" hidden>
 </div>
 
 <div id="menu"></div>
@@ -1649,7 +1651,15 @@ $('go').onclick=start;
 var EMOJIS='😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 😉 😍 🥰 😘 😋 😎 🤩 🥳 😏 😒 😞 😔 😢 😭 😤 😡 🤯 😱 😴 🤔 🙄 😬 🤗 🙏 👍 👎 👏 🙌 💪 👌 🤝 ❤️ 💔 🔥 ✨ 🎉 🎂 🌹 ☕ 🍕 🙈 😜 🤪 🥺 😌 😷 🤒';
 var emp=$('emp'); EMOJIS.split(' ').forEach(function(e){var sp=document.createElement('span');sp.textContent=e;sp.onclick=function(){$('in').value+=e;updIcon();};emp.appendChild(sp);});
 $('emo').onclick=function(){emp.style.display=emp.style.display==='grid'?'none':'grid'};
-$('att').onclick=function(){ if(client&&client.connected)$('fi').click(); };
+$('att').onclick=function(e){
+  if(!(client&&client.connected))return;
+  e.stopPropagation();
+  showMenu([
+    {t:'📷 Camera se nayi photo',f:function(){ $('fc').click(); }},
+    {t:'🖼️ Gallery se photo',f:function(){ $('fi').click(); }},
+    {t:'🎞️ Gallery se video',f:function(){ $('fv').click(); }}
+  ],$('att').getBoundingClientRect());
+};
 $('fi').onchange=function(){
   var f=this.files[0]; this.value=''; if(!f)return;
   if(/^video\//.test(f.type)){ sendVideoFile(f); return; }
@@ -1662,6 +1672,7 @@ $('fi').onchange=function(){
   };
   img.src=u;
 };
+$('fc').onchange=$('fi').onchange; $('fv').onchange=$('fi').onchange;
 $('iv').onclick=function(){this.style.display='none'};
 function applyDark(){ var on=ls('dc_dark')==='1'; document.body.classList.toggle('dark',on); document.querySelector('meta[name=theme-color]').content=on?'#202c33':'#008069'; }
 if(!ls('dc_dark'))ls('dc_dark',(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'1':'0');
