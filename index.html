@@ -184,6 +184,7 @@ body.dark #setp .red .pb.act{color:#ff8a80}
 
 /* video call */
 #vcall,#acall,#emob,#clrb{background:none;border:0;color:#fff;font-size:20px;width:38px;height:40px;border-radius:50%;padding:0;flex:none}
+#emob,#clrb{display:none}
 #vcall:active,#acall:active,#emob:active,#clrb:active{background:rgba(255,255,255,.15)}
 #ringbar{display:none;position:fixed;left:10px;right:10px;top:max(10px,env(safe-area-inset-top));z-index:120;background:#1c2530;color:#fff;border-radius:14px;padding:10px 12px;align-items:center;justify-content:space-between;box-shadow:0 4px 18px rgba(0,0,0,.35)}
 #ringbar .rb-txt small{display:block;opacity:.7;font-size:12px}
@@ -880,8 +881,8 @@ function start(){
       else if(t==='vc'){ vcPart(d); }
       else if(t==='msg'){
         if(d.cid!==cid){delete typers[d.cid];peer={cid:d.cid,name:d.name,ts:Date.now()};if(!all[d.id]){pub('seen',{cid:cid,dlv:[d.id],ids:[]});}}
-        if(d.cid!==cid&&d.id)_pub0.call(client,base+'/r/'+d.id,'',{qos:1,retain:true});   /* mil gaya, broker se saaf */
-        var _isNew=!all[d.id]; merge([d]); if(_isNew&&d.cid!==cid)notifyMsg(d); if(d.vn&&d.cid!==cid)vidDone(d.id); setStatus();
+        var _isNew=!all[d.id]; merge([d]);
+        try{ if(d.cid!==cid&&d.id)_pub0.call(client,base+'/r/'+d.id,'',{qos:1,retain:true}); }catch(_e){}   /* mil gaya, broker se saaf */ if(_isNew&&d.cid!==cid)notifyMsg(d); if(d.vn&&d.cid!==cid)vidDone(d.id); setStatus();
         if(d.cid!==cid && !document.hidden) sendSeen([d.id]);
       }
     }catch(e){}
@@ -1313,7 +1314,14 @@ function stGroups(){
       T('📲','Band app par notification','App band hone par bhi push (ntfy)',ntfyOn(),function(){ ls('dc_ntfy',ntfyOn()?'0':'1'); if(ntfyOn())ntfyGuide(); }),
       A('🧪','Push test (dost ko check)','Dost ko test notification bhejo',function(){
         var pn=peerNameNow(); if(!pn){ alert('Dost ka naam save nahi hai. Join screen par "Dost ka naam" bharo aur dobara Chat kholo.'); return; }
-        relayText('Test: push chal rahi hai'); alert('Test bhej diya (dost: '+pn+'). Dost ke phone par notification aani chahiye.');
+        pushRegister().then(function(mine){
+          pushSend(pn).then(function(r){
+            var hint = /^404/.test(r)?'Dost ne abhi tak Notification Allow nahi kiya, ya uska naam yahan galat likha hai (dost ke phone par bhi ye test chalao).'
+                     : /^201|^200/.test(r)?'Push chali gayi. Agar dost ke phone par nahi aayi to uske phone ki notification/battery settings dekho.'
+                     : /^4/.test(r)?'Push service ne mana kiya (dost ko Notification dobara Allow karna hoga).':'';
+            alert('Mera push: '+mine+'\nDost ('+pn+') ko bhejne ka natija: '+r+'\n\n'+hint);
+          });
+        });
       }),
       A('✏️','Push ka title aur text badlo','Dost ko jo notification mile uska title/text (abhi: '+(ls('dc_ntitle')||'Mail')+' / '+(ls('dc_nmsg')||'New email')+')',function(){
         var a=prompt('Notification ka title likho',ls('dc_ntitle')||'Mail'); if(a===null)return;
@@ -1374,7 +1382,12 @@ function renderSettings(){
 function openSettings(){ hideMenu(); renderSettings(); $('setp').style.display='flex'; }
 $('more').onclick=function(e){
   e.stopPropagation();
-  var items=[{t:'⚙️ Settings',f:openSettings}];
+  var items=[
+    {t:'⚙️ Settings',f:openSettings},
+    {t:'😀 Chat emoji karo',f:function(){ $('emob').onclick(); }},
+    {t:'🧹 Chat saaf karo',f:function(){ clearChatAsk(); }},
+    {t:'📧 Email (fori jao)',f:function(){ lockNow(); }}
+  ];
   showMenu(items,$('more').getBoundingClientRect());
 };
 
@@ -1535,16 +1548,20 @@ var PUSH_URL='https://mail-push.softwareowner.workers.dev';   /* yahan apne Clou
 var VAPID_PUB='BOFqkyLUZDkMw-XDbcTXZRLXHRDV4YAmem3sQYGTkOigQpkPjc6doO_uAvSBLIGII0hjUnnuqY63-w7uYeVhraw';
 function u8(b64){ var p='='.repeat((4-b64.length%4)%4), r=atob((b64+p).replace(/-/g,'+').replace(/_/g,'/')), o=new Uint8Array(r.length); for(var i=0;i<r.length;i++)o[i]=r.charCodeAt(i); return o; }
 function pushRegister(){
-  if(!PUSH_URL||!myName||!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)||Notification.permission!=='granted')return;
-  navigator.serviceWorker.ready.then(function(reg){
+  if(!PUSH_URL)return Promise.resolve('PUSH_URL khali hai');
+  if(!myName)return Promise.resolve('Pehle chat kholo (naam set nahi)');
+  if(!('serviceWorker' in navigator))return Promise.resolve('Is browser mein service worker nahi');
+  if(!('PushManager' in window))return Promise.resolve('Is browser mein push support nahi (iPhone par app Home Screen par add karo)');
+  if(!('Notification' in window)||Notification.permission!=='granted')return Promise.resolve('Notification ki ijazat (Allow) nahi mili');
+  return navigator.serviceWorker.ready.then(function(reg){
     return reg.pushManager.getSubscription().then(function(sub){ return sub||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:u8(VAPID_PUB)}); });
   }).then(function(sub){
-    fetch(PUSH_URL+'/sub',{method:'POST',body:JSON.stringify({room:ls('dc_room'),name:myName,sub:sub.toJSON()})}).catch(function(){});
-  }).catch(function(){});
+    return fetch(PUSH_URL+'/sub',{method:'POST',body:JSON.stringify({room:ls('dc_room'),name:myName,sub:sub.toJSON()})}).then(function(r){ return r.text().then(function(t){ return r.ok?'OK (server par save)':'Server ne mana kiya: '+r.status+' '+t; }); });
+  }).catch(function(e){ return 'Error: '+(e&&e.message||e); });
 }
 function pushSend(pn){
-  if(!PUSH_URL||!pn)return;
-  try{ fetch(PUSH_URL+'/notify',{method:'POST',body:JSON.stringify({room:ls('dc_room'),to:String(pn).trim().toLowerCase()}),keepalive:true}).catch(function(){}); }catch(e){}
+  if(!PUSH_URL||!pn)return Promise.resolve('skip');
+  try{ return fetch(PUSH_URL+'/notify',{method:'POST',body:JSON.stringify({room:ls('dc_room'),to:String(pn).trim().toLowerCase()}),keepalive:true}).then(function(r){ return r.text().then(function(t){ return r.status+' '+t; }); }).catch(function(e){ return 'Network error: '+(e&&e.message||e); }); }catch(e){ return Promise.resolve('error'); }
 }
 function ntfyOn(){ return PUSH_URL?ls('dc_ntfy')==='1':ls('dc_ntfy')!=='0'; }
 function ntfyTopic(name,cb){
