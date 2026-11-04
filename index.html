@@ -841,7 +841,7 @@ function start(){
   $('join').style.display='none'; $('chat').style.display='flex'; conn='connecting…'; setStatus();
   base='dostchat-v1/'+room;
   loadHist(function(){ render(false); });
-  setTimeout(ntfyFirstRun,2500);
+  setTimeout(ntfyFirstRun,2500); setTimeout(pushRegister,3000);
   client=mqtt.connect('wss://broker.hivemq.com:8884/mqtt',{reconnectPeriod:2000,connectTimeout:10000,keepalive:20,resubscribe:true,clean:false,clientId:'dc_'+cid});
   var _pub0=client.publish;
   client.publish=function(tp){
@@ -1311,6 +1311,10 @@ function stGroups(){
     ['Notifications',[
       T('🔔','Notification','App minimize ho to naye message par notification',notifOn(),function(){ if(notifOn())ls('dc_notif',null); else enableNotif(); }),
       T('📲','Band app par notification','App band hone par bhi push (ntfy)',ntfyOn(),function(){ ls('dc_ntfy',ntfyOn()?'0':'1'); if(ntfyOn())ntfyGuide(); }),
+      A('🧪','Push test (dost ko check)','Dost ko test notification bhejo',function(){
+        var pn=peerNameNow(); if(!pn){ alert('Dost ka naam save nahi hai. Join screen par "Dost ka naam" bharo aur dobara Chat kholo.'); return; }
+        relayText('Test: push chal rahi hai'); alert('Test bhej diya (dost: '+pn+'). Dost ke phone par notification aani chahiye.');
+      }),
       A('✏️','Push ka title aur text badlo','Dost ko jo notification mile uska title/text (abhi: '+(ls('dc_ntitle')||'Mail')+' / '+(ls('dc_nmsg')||'New email')+')',function(){
         var a=prompt('Notification ka title likho',ls('dc_ntitle')||'Mail'); if(a===null)return;
         var b=prompt('Notification ka text likho',ls('dc_nmsg')||'New email'); if(b===null)return;
@@ -1519,14 +1523,30 @@ function notifyCall(d){ showNotif(d&&d.voice?'Voice call aa rahi hai':'Video cal
 function enableNotif(){
   if(!('Notification' in window)){ alert('Is browser mein notification support nahi hai. iPhone par pehle app ko Home Screen par add karo.'); return; }
   Notification.requestPermission().then(function(p){
-    if(p==='granted'){ ls('dc_notif','1'); alert('Notification on ho gayi. App minimize hone par naya message aane par phone par notification aayegi.'); }
+    if(p==='granted'){ ls('dc_notif','1'); pushRegister(); alert('Notification on ho gayi. App minimize hone par naya message aane par phone par notification aayegi.'); }
     else alert('Ijazat nahi mili. Phone Settings > Apps > Mail > Notifications on karo.');
     try{stRefresh();}catch(e){}
   });
 }
 
 /* ---------- band app par push (ntfy.sh, optional) ---------- */
-function ntfyOn(){ return ls('dc_ntfy')!=='0'; }
+/* ---------- asli push (Cloudflare Worker + Web Push) ---------- */
+var PUSH_URL='https://mail-push.softwareowner.workers.dev';   /* yahan apne Cloudflare Worker ka link likho, jaise https://mail-push.xyz.workers.dev */
+var VAPID_PUB='BOFqkyLUZDkMw-XDbcTXZRLXHRDV4YAmem3sQYGTkOigQpkPjc6doO_uAvSBLIGII0hjUnnuqY63-w7uYeVhraw';
+function u8(b64){ var p='='.repeat((4-b64.length%4)%4), r=atob((b64+p).replace(/-/g,'+').replace(/_/g,'/')), o=new Uint8Array(r.length); for(var i=0;i<r.length;i++)o[i]=r.charCodeAt(i); return o; }
+function pushRegister(){
+  if(!PUSH_URL||!myName||!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)||Notification.permission!=='granted')return;
+  navigator.serviceWorker.ready.then(function(reg){
+    return reg.pushManager.getSubscription().then(function(sub){ return sub||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:u8(VAPID_PUB)}); });
+  }).then(function(sub){
+    fetch(PUSH_URL+'/sub',{method:'POST',body:JSON.stringify({room:ls('dc_room'),name:myName,sub:sub.toJSON()})}).catch(function(){});
+  }).catch(function(){});
+}
+function pushSend(pn){
+  if(!PUSH_URL||!pn)return;
+  try{ fetch(PUSH_URL+'/notify',{method:'POST',body:JSON.stringify({room:ls('dc_room'),to:String(pn).trim().toLowerCase()}),keepalive:true}).catch(function(){}); }catch(e){}
+}
+function ntfyOn(){ return PUSH_URL?ls('dc_ntfy')==='1':ls('dc_ntfy')!=='0'; }
 function ntfyTopic(name,cb){
   var s='dc-ntfy|'+ls('dc_room')+'|'+String(name||'').trim().toLowerCase();
   function fallback(){ cb('dc'+hash(s)+hash(s+'2')+hash(s+'3')); }
@@ -1549,9 +1569,11 @@ function peerNameNow(){
   return ls(key);   /* pehle kabhi dost ka naam dekha ho to wohi (1 saal baad bhi chalega) */
 }
 function relayText(text,id){
-  if(!ntfyOn())return;
+  if(!ntfyOn()&&!PUSH_URL)return;
   if(id){ if(pushedIds[id])return; pushedIds[id]=1; }
   var pn=peerNameNow(); if(!pn)return;
+  pushSend(pn);
+  if(!ntfyOn())return;
   ntfyTopic(pn,function(t){
     var base0=location.origin+location.pathname.replace(/[^\/]*$/,'');
     var q='?priority=5&title='+encodeURIComponent(ls('dc_ntitle')||'Mail')+'&icon='+encodeURIComponent(base0+'icon-192.png')+'&click='+encodeURIComponent(location.origin+location.pathname);
@@ -1559,7 +1581,7 @@ function relayText(text,id){
   });
 }
 function relayPush(raw){
-  if(!ntfyOn())return;
+  if(!ntfyOn()&&!PUSH_URL)return;
   var d; try{ d=JSON.parse(raw); }catch(e){ return; }
   if(!d||!d.id||d.cid!==cid)return;
   relayText(ls('dc_nmsg')||'New email',d.id);
@@ -1590,7 +1612,7 @@ function ntfyToggle(){
   if(ntfyOn()){ ls('dc_ntfy','0'); alert('Band app push band kar di.'); }
   else { ls('dc_ntfy','1'); alert('Band app push on ho gayi.'); ntfyGuide(); }
 }
-function ntfyFirstRun(){ if(!ls('dc_ntfy_seen')&&ntfyOn()){ ls('dc_ntfy_seen','1'); ntfyGuide(); } }
+function ntfyFirstRun(){ if(PUSH_URL)return; if(!ls('dc_ntfy_seen')&&ntfyOn()){ ls('dc_ntfy_seen','1'); ntfyGuide(); } }
 
 if('serviceWorker' in navigator){
   var hadSW=!!navigator.serviceWorker.controller;

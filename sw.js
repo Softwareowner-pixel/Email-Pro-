@@ -34,3 +34,8 @@ self.addEventListener('notificationclick',function(e){
     return self.clients.openWindow('./');
   }));
 });
+
+/* asli push: server se khali push aati hai, yahan notification dikhate hain */
+self.addEventListener('push',function(e){
+  e.waitUntil(self.registration.showNotification('Mail',{body:'New email',tag:'dc-msg',renotify:true,icon:'icon-192.png',badge:'icon-192.png',vibrate:[120,60,120]}));
+});
