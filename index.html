@@ -326,6 +326,7 @@ body.dark #gm-setup button{color:#062e6f}
   <h2>Chat shuru karo</h2>
   <input id="name" placeholder="Aapka naam" maxlength="20">
   <input id="room" placeholder="Chat code (lamba aur secret, jaise: ali-sara-7391)" maxlength="40">
+  <input id="peername" placeholder="Dost ka naam (jo wo apne naam mein likhega)" maxlength="20">
   <button id="go">Chat kholo</button>
   <p>Dost ko bhi yehi chat code batao. Jis ka code same hoga wahi chat dekh sakta hai.</p>
 </div>
@@ -447,7 +448,7 @@ body.dark #gm-setup button{color:#062e6f}
 <script>
 var $=function(i){return document.getElementById(i)};
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k)||'';if(v===null){localStorage.removeItem(k);return ''}localStorage.setItem(k,v)}catch(e){return ''}}
-$('name').value=ls('dc_name'); $('room').value=ls('dc_room');
+$('name').value=ls('dc_name'); $('room').value=ls('dc_room'); $('peername').value=ls('dc_peer|'+ls('dc_room'));
 var cid=ls('dc_cid'); if(!cid){cid=Math.random().toString(36).slice(2,10); ls('dc_cid',cid);}
 
 var all={}, seen={}, sentSeen={}, edits={}, dels={}, typers={}, dlv={}, reacts={}, hidden={}, peer=null;
@@ -836,19 +837,30 @@ function start(){
   var name=$('name').value.trim(), room=$('room').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g,'');
   if(!name||room.length<4){alert('Naam likho aur kam se kam 4 akshar ka chat code do');return;}
   ls('dc_name',name); ls('dc_room',room); myName=name;
+  var _pn=$('peername').value.trim(); if(_pn)ls('dc_peer|'+room,_pn);   /* dost ka naam pehle se pata -> offline hone par bhi push jayegi */
   $('join').style.display='none'; $('chat').style.display='flex'; conn='connecting…'; setStatus();
   base='dostchat-v1/'+room;
   loadHist(function(){ render(false); });
   setTimeout(ntfyFirstRun,2500);
   client=mqtt.connect('wss://broker.hivemq.com:8884/mqtt',{reconnectPeriod:2000,connectTimeout:10000,keepalive:20,resubscribe:true,clean:false,clientId:'dc_'+cid});
-  var _pub0=client.publish; client.publish=function(tp){ try{ if(tp===base+'/msg')relayPush(arguments[1]); }catch(e){} return _pub0.apply(client,arguments); };
-  client.on('connect',function(){ conn='online'; setStatus(); client.subscribe(base+'/vc',{qos:1}); client.subscribe(base+'/msg',{qos:1}); client.subscribe([base+'/seen',base+'/typing',base+'/edit',base+'/del',base+'/react',base+'/pres']); client.subscribe(base+'/rtc',{qos:1}); presPing(); client.publish(base+'/hist','',{retain:true}); });
+  var _pub0=client.publish;
+  client.publish=function(tp){
+    try{ if(tp===base+'/msg'){
+      relayPush(arguments[1]);
+      /* dost offline ya abhi join nahi hua: message broker par save rahe (sirf chote messages) */
+      var _raw=arguments[1], _d=JSON.parse(_raw);
+      if(_d&&_d.id&&String(_raw).length<6000)_pub0.call(client,base+'/r/'+_d.id,_raw,{qos:1,retain:true});
+    } }catch(e){}
+    return _pub0.apply(client,arguments);
+  };
+  client.on('connect',function(){ conn='online'; setStatus(); client.subscribe(base+'/vc',{qos:1}); client.subscribe(base+'/msg',{qos:1}); client.subscribe(base+'/r/+',{qos:1}); client.subscribe([base+'/seen',base+'/typing',base+'/edit',base+'/del',base+'/react',base+'/pres']); client.subscribe(base+'/rtc',{qos:1}); presPing(); client.publish(base+'/hist','',{retain:true}); });
   client.on('reconnect',function(){ conn='reconnecting…'; setStatus(); });
   client.on('offline',function(){ conn='offline'; setStatus(); });
   client.on('error',function(){});
   client.on('message',function(topic,payload){
     try{
       var d=JSON.parse(payload.toString()), t=topic.slice(base.length+1);
+      if(t.indexOf('r/')===0)t='msg';   /* broker mein save huwa message */
       if(t==='seen'){ if(d.cid!==cid){ (d.ids||[]).forEach(function(i){seen[i]=1;dlv[i]=1}); (d.dlv||[]).forEach(function(i){dlv[i]=1}); render(true); } }
       else if(t==='typing'){ if(d.cid!==cid){ typers[d.cid]={name:d.name,ts:Date.now()}; peer={cid:d.cid,name:d.name,ts:Date.now()}; setStatus(); }
       else if(t==='pres'){} }
@@ -868,6 +880,7 @@ function start(){
       else if(t==='vc'){ vcPart(d); }
       else if(t==='msg'){
         if(d.cid!==cid){delete typers[d.cid];peer={cid:d.cid,name:d.name,ts:Date.now()};if(!all[d.id]){pub('seen',{cid:cid,dlv:[d.id],ids:[]});}}
+        if(d.cid!==cid&&d.id)_pub0.call(client,base+'/r/'+d.id,'',{qos:1,retain:true});   /* mil gaya, broker se saaf */
         var _isNew=!all[d.id]; merge([d]); if(_isNew&&d.cid!==cid)notifyMsg(d); if(d.vn&&d.cid!==cid)vidDone(d.id); setStatus();
         if(d.cid!==cid && !document.hidden) sendSeen([d.id]);
       }
