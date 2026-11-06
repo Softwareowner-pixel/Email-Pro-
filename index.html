@@ -444,7 +444,6 @@ body.dark #gm-setup button{color:#062e6f}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
-<script>window.mqtt||document.write('<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"><\/script>');</script>
 <script>
 var $=function(i){return document.getElementById(i)};
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k)||'';if(v===null){localStorage.removeItem(k);return ''}localStorage.setItem(k,v)}catch(e){return ''}}
@@ -453,16 +452,6 @@ var cid=ls('dc_cid'); if(!cid){cid=Math.random().toString(36).slice(2,10); ls('d
 
 var all={}, seen={}, sentSeen={}, edits={}, dels={}, typers={}, dlv={}, reacts={}, hidden={}, peer=null;
 var client=null, base='', myName='', conn='', replyTo=null, editing=null, lastTyping=0;
-var lastConnAt=0, lastAttemptAt=0, peerSkew=null, outTry={}, dcLogs=[];
-function dcLog(a,b){ try{ dcLogs.push(new Date().toISOString().slice(11,19)+' '+a+(b?' '+b:'')); if(dcLogs.length>60)dcLogs.shift(); window.dcLogs=dcLogs; console.log('[dc]',a,b||''); }catch(e){} }
-(function(){ var W=window.WebSocket; if(!W||W.__dc)return;
-  function WS(u,p){ var s=(p===undefined)?new W(u):new W(u,p);
-    try{ dcLog('ws new'); s.addEventListener('open',function(){dcLog('ws open')});
-      s.addEventListener('close',function(e){dcLog('ws close',e.code+(e.reason?' '+e.reason:'')+(e.wasClean?'':' unclean'))});
-      s.addEventListener('error',function(){dcLog('ws error')}); }catch(e){}
-    return s; }
-  WS.prototype=W.prototype; ['CONNECTING','OPEN','CLOSING','CLOSED'].forEach(function(k){WS[k]=W[k]}); WS.__dc=1; window.WebSocket=WS;
-})();
 
 /* ---------- chat history is device par save hoti hai (IndexedDB) ---------- */
 var DB=null, saveT=null, histKey='';
@@ -562,7 +551,7 @@ function setStatus(){
   if(names.length){st.textContent=names.join(', ')+' typing…';st.className='ty';}
   else{
     var tx=conn;
-    if(conn==='online'||!conn){ tx=peer?((now-peer.ts<30000)?'online':'last seen '+hhmm(peer.ts)):''; }
+    if(conn==='online'||!conn){ tx=peer?((now-peer.ts<20000)?'online':'last seen '+hhmm(peer.ts)):''; }
     st.textContent=tx;st.className='';
   }
   $('ttl').textContent=(peer&&!maskOn)?peer.name:'Dost Chat'; $('avt').textContent=(peer&&!maskOn)?peer.name.charAt(0).toUpperCase():'💬';
@@ -765,7 +754,7 @@ function sendImage(d){
   merge([msg]); $('msgs').scrollTop=$('msgs').scrollHeight;
   if(client&&client.connected)client.publish(base+'/msg',JSON.stringify(msg),{qos:1});
 }
-function presPing(){ if(client&&client.connected&&myName)client.publish(base+'/pres',JSON.stringify({cid:cid,name:myName,t:Date.now()}),{qos:0}); }
+function presPing(){ if(client&&client.connected&&myName)client.publish(base+'/pres',JSON.stringify({cid:cid,name:myName}),{qos:0}); }
 setInterval(presPing,8000);
 
 /* mic <-> send icon */
@@ -812,56 +801,6 @@ function applyMods(m){
 }
 function merge(arr){ var ch=false; arr.forEach(function(m){ if(m&&m.id&&!all[m.id]){applyMods(m);all[m.id]=m;ch=true;} }); if(ch)render(true); }
 function pub(topic,obj){ if(client&&client.connected)client.publish(base+'/'+topic,JSON.stringify(obj),{qos:1}); }
-/* outbox: jis msg ka delivery ack nahi aaya use dobara bhejo (peer id se duplicate ignore karta hai) */
-function flushOutbox(){
-  if(!client||!client.connected)return;
-  var now=Date.now(), sent=0;
-  Object.keys(all).sort(function(a,b){return all[a].ts-all[b].ts}).forEach(function(i){
-    var m=all[i];
-    if(sent>=3||!m||m.cid!==cid||dlv[i]||seen[i]||m.deleted||m.vn||now-m.ts<10000||now-m.ts>259200000)return;
-    var o=outTry[i]||(outTry[i]={n:0,t:0});
-    if(now-o.t<Math.min(12000*Math.pow(2,o.n),900000))return;
-    o.n++; o.t=now; sent++;
-    try{ client.publish(base+'/msg',JSON.stringify(m),{qos:1}); dcLog('resend',i); }catch(e){}
-  });
-}
-setInterval(flushOutbox,15000);
-/* agar connect hote hi 5 s ke andar 3 baar close ho (clientId takeover loop) to naya clientId le lo */
-var flap=0;
-function onClosed(){
-  var now=Date.now();
-  if(lastConnAt&&now-lastConnAt<5000)flap++; else flap=0;
-  dcLog('close','flap='+flap);
-  if(flap>=3){ flap=0; var nid='dc_'+cid+'_'+Math.random().toString(36).slice(2,6); try{ client.options.clientId=nid; }catch(e){} dcLog('new clientId',nid); }
-}
-function quickReconnect(){ if(client&&!client.connected&&Date.now()-lastAttemptAt>1500){ lastAttemptAt=Date.now(); try{client.reconnect();}catch(e){} } }
-/* status line par tap = connection log dikhao (screenshot bhejne ke liye) */
-function showDbg(){
-  if(maskOn)return;
-  var o=document.createElement('div');
-  o.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px';
-  var b=document.createElement('div');
-  b.style.cssText='background:#fff;color:#111;border-radius:12px;padding:12px;max-width:420px;width:100%;max-height:85%;overflow:auto;font:12px/1.4 monospace';
-  var info='v2 | '+(client&&client.connected?'ONLINE':'offline')+' | netOnLine='+navigator.onLine+' | id='+(client&&client.options&&client.options.clientId)+' | '+location.host;
-  var pre=document.createElement('pre'); pre.style.cssText='white-space:pre-wrap;word-break:break-all;margin:8px 0';
-  pre.textContent=info+'\n\n'+dcLogs.slice(-40).join('\n');
-  var cp=document.createElement('button'); cp.textContent='Copy'; cp.style.marginRight='8px'; cp.onclick=function(){ try{navigator.clipboard.writeText(pre.textContent)}catch(e){} };
-  var x=document.createElement('button'); x.textContent='Band karo'; x.onclick=function(){ document.body.removeChild(o); };
-  b.appendChild(cp); b.appendChild(x); b.appendChild(pre); o.appendChild(b); document.body.appendChild(o);
-}
-/* ek device par sirf ek connection (same clientId ki wajah se reconnect loop band) */
-function acquireConn(cb){
-  if(!(navigator.locks&&navigator.locks.request)){ cb(); return; }
-  var tries=function(){
-    var got=false;
-    navigator.locks.request('dc_conn_'+cid,{ifAvailable:true},function(lock){
-      if(!lock){ conn='doosri window mein khuli hai'; setStatus(); setTimeout(tries,2500); return; }
-      got=true; cb();
-      return new Promise(function(){});
-    }).catch(function(){ if(!got)cb(); });
-  };
-  tries();
-}
 function sendSeen(ids){
   ids=ids.filter(function(i){return !sentSeen[i]});
   if(!ids.length||!client||!client.connected)return;
@@ -879,8 +818,8 @@ function delMsg(id){
 }
 
 function send(){
-  var text=$('in').value.trim(); if(!text||!client)return;
-  if(editing){ if(!client.connected)return;
+  var text=$('in').value.trim(); if(!text||!client||!client.connected)return;
+  if(editing){
     var m=all[editing];
     if(m&&m.text!==text){ m.text=text;m.edited=1;edits[m.id]={cid:cid,text:text}; pub('edit',{id:m.id,cid:cid,text:text}); }
     editing=null; $('in').value=''; updateBar(); render(true); return;
@@ -889,7 +828,7 @@ function send(){
   if(replyTo)msg.reply={id:replyTo.id,cid:replyTo.cid,name:replyTo.name,text:clip(replyTo.text,120)};
   $('in').value=''; replyTo=null; updateBar(); lastTyping=0;
   merge([msg]); $('msgs').scrollTop=$('msgs').scrollHeight;
-  if(client.connected)client.publish(base+'/msg',JSON.stringify(msg),{qos:1});
+  client.publish(base+'/msg',JSON.stringify(msg),{qos:1});
   $('in').focus();
 }
 
@@ -901,26 +840,19 @@ function start(){
   base='dostchat-v1/'+room;
   loadHist(function(){ render(false); });
   setTimeout(ntfyFirstRun,2500);
-  if(client){ try{client.end(true)}catch(e){} client=null; }
-  bindUi(); acquireConn(connectMqtt);
-}
-function connectMqtt(){
-  if(typeof mqtt==='undefined'){ conn='mqtt library load nahi hui (internet check karo)'; setStatus(); return; }
-  lastAttemptAt=Date.now();
-  client=mqtt.connect('wss://broker.hivemq.com:8884/mqtt',{reconnectPeriod:3000,connectTimeout:8000,keepalive:20,resubscribe:true,clean:false,clientId:'dc_'+cid});
+  client=mqtt.connect('wss://broker.hivemq.com:8884/mqtt',{reconnectPeriod:2000,connectTimeout:10000,keepalive:20,resubscribe:true,clean:false,clientId:'dc_'+cid});
   var _pub0=client.publish; client.publish=function(tp){ try{ if(tp===base+'/msg')relayPush(arguments[1]); }catch(e){} return _pub0.apply(client,arguments); };
-  client.on('connect',function(){ conn='online'; lastConnAt=Date.now(); dcLog('connect'); setStatus(); setTimeout(flushOutbox,1500); client.subscribe(base+'/vc',{qos:1}); client.subscribe(base+'/msg',{qos:1}); client.subscribe([base+'/seen',base+'/edit',base+'/del',base+'/react'],{qos:1}); client.subscribe([base+'/typing',base+'/pres']); client.subscribe(base+'/rtc',{qos:1}); presPing(); client.publish(base+'/hist','',{retain:true}); });
-  client.on('reconnect',function(){ conn='reconnecting…'; lastAttemptAt=Date.now(); dcLog('reconnect'); setStatus(); });
-  client.on('offline',function(){ conn='offline'; dcLog('offline'); setStatus(); });
-  client.on('close',onClosed);
-  client.on('error',function(e){ dcLog('error',e&&e.message); });
+  client.on('connect',function(){ conn='online'; setStatus(); client.subscribe(base+'/vc',{qos:1}); client.subscribe(base+'/msg',{qos:1}); client.subscribe([base+'/seen',base+'/typing',base+'/edit',base+'/del',base+'/react',base+'/pres']); client.subscribe(base+'/rtc',{qos:1}); presPing(); client.publish(base+'/hist','',{retain:true}); });
+  client.on('reconnect',function(){ conn='reconnecting…'; setStatus(); });
+  client.on('offline',function(){ conn='offline'; setStatus(); });
+  client.on('error',function(){});
   client.on('message',function(topic,payload){
     try{
       var d=JSON.parse(payload.toString()), t=topic.slice(base.length+1);
       if(t==='seen'){ if(d.cid!==cid){ (d.ids||[]).forEach(function(i){seen[i]=1;dlv[i]=1}); (d.dlv||[]).forEach(function(i){dlv[i]=1}); render(true); } }
       else if(t==='typing'){ if(d.cid!==cid){ typers[d.cid]={name:d.name,ts:Date.now()}; peer={cid:d.cid,name:d.name,ts:Date.now()}; setStatus(); }
       else if(t==='pres'){} }
-      else if(t==='pres'){ if(d.cid!==cid){ if(d.t)peerSkew=Date.now()-d.t; var was=peer&&Date.now()-peer.ts<20000; peer={cid:d.cid,name:d.name,ts:Date.now()}; if(!was)presPing(); setStatus(); } }
+      else if(t==='pres'){ if(d.cid!==cid){ var was=peer&&Date.now()-peer.ts<20000; peer={cid:d.cid,name:d.name,ts:Date.now()}; if(!was)presPing(); setStatus(); } }
       else if(t==='react'){ if(d.cid!==cid){ reacts[d.id]=reacts[d.id]||{}; if(d.e)reacts[d.id][d.cid]=d.e; else delete reacts[d.id][d.cid]; render(true); } }
       else if(t==='edit'){
         if(d.cid===cid)return;
@@ -935,21 +867,18 @@ function connectMqtt(){
       else if(t==='rtc'){ if(d.cid!==cid) rtcHandle(d); }
       else if(t==='vc'){ vcPart(d); }
       else if(t==='msg'){
-        if(d.cid!==cid){delete typers[d.cid];peer={cid:d.cid,name:d.name,ts:Date.now()};if(!all[d.id]){ if(peerSkew!==null&&Math.abs(peerSkew)>30000&&d.ts)d.ts+=peerSkew; if(d.ts>Date.now()+5000)d.ts=Date.now(); } pub('seen',{cid:cid,dlv:[d.id],ids:[]}); }
+        if(d.cid!==cid){delete typers[d.cid];peer={cid:d.cid,name:d.name,ts:Date.now()};if(!all[d.id]){pub('seen',{cid:cid,dlv:[d.id],ids:[]});}}
         var _isNew=!all[d.id]; merge([d]); if(_isNew&&d.cid!==cid)notifyMsg(d); if(d.vn&&d.cid!==cid)vidDone(d.id); setStatus();
         if(d.cid!==cid && !document.hidden) sendSeen([d.id]);
       }
     }catch(e){}
   });
-}
-function bindUi(){
-  $('st').onclick=showDbg;
   $('send').onclick=sendOrMic;
   $('in').onkeydown=function(e){if(e.key==='Enter')send();};
   $('in').oninput=function(){
     updIcon();
     var now=Date.now();
-    if(now-lastTyping>2000 && $('in').value && !editing){ lastTyping=now; if(client&&client.connected)client.publish(base+'/typing',JSON.stringify({cid:cid,name:myName}),{qos:0}); }
+    if(now-lastTyping>2000 && $('in').value && !editing){ lastTyping=now; if(client.connected)client.publish(base+'/typing',JSON.stringify({cid:cid,name:myName}),{qos:0}); }
   };
 }
 
@@ -1472,13 +1401,13 @@ function dropSock(){ try{ client.stream.destroy(); }catch(e){ try{ client.reconn
 function kickConn(force){
   if(!client)return;
   try{
-    if(client.connected){ if(force&&Date.now()-lastConnAt>5000){ dropSock(); setTimeout(quickReconnect,700); } else presPing(); }
-    else if(Date.now()-lastAttemptAt>20000){ lastAttemptAt=Date.now(); client.reconnect(); }
+    if(client.connected){ if(force)dropSock(); else presPing(); }
+    else if(!client.reconnecting){ client.reconnect(); }
   }catch(e){}
 }
 document.addEventListener('visibilitychange',function(){
   if(document.hidden){ hiddenAt=Date.now(); }
-  else { kickConn(Date.now()-hiddenAt>30000); wakeAsk(); }
+  else { kickConn(Date.now()-hiddenAt>15000); wakeAsk(); }
 });
 window.addEventListener('online',function(){ kickConn(true); });
 window.addEventListener('focus',function(){ if(client&&!client.connected)kickConn(false); });
