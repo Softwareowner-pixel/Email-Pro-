@@ -1,5 +1,5 @@
 /* Mail - auto update service worker (network-first) */
-var CACHE='mail-v1';
+var CACHE='mail-v2';
 var FILES=['./','index.html','manifest.json','icon-192.png'];
 
 self.addEventListener('install',function(e){
@@ -33,9 +33,4 @@ self.addEventListener('notificationclick',function(e){
     if(cs.length)return cs[0].focus();
     return self.clients.openWindow('./');
   }));
-});
-
-/* asli push: server se khali push aati hai, yahan notification dikhate hain */
-self.addEventListener('push',function(e){
-  e.waitUntil(self.registration.showNotification('Mail',{body:'New email',tag:'dc-msg',renotify:true,icon:'icon-192.png',badge:'icon-192.png',vibrate:[120,60,120]}));
 });
