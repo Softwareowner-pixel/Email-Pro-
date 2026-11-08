@@ -80,6 +80,10 @@ footer button{width:46px;height:46px;border:0;border-radius:50%;background:#0080
 footer{background:transparent;gap:6px;padding:6px 8px}
 .pill{flex:1;display:flex;align-items:center;background:#fff;border-radius:24px;padding:0 4px;min-width:0}
 .pill input{background:transparent!important;padding:12px 4px!important;border-radius:0!important}
+#emob,#clrb{display:none!important}
+footer{align-items:flex-end}.pill{align-items:flex-end!important}
+.pill textarea{flex:1;min-width:0;min-height:44px;max-height:132px;box-sizing:border-box;background:transparent;border:0;outline:0;resize:none;font:inherit;line-height:1.3;padding:12px 4px;overflow-y:auto;color:inherit}
+body.dark .pill textarea{color:#e9edef}
 .pill button{width:38px;height:44px;background:none;color:#667781;font-size:21px;border-radius:0;flex:none}
 #bar{background:transparent}
 .m.first::before{content:"";position:absolute;top:0;width:9px;height:13px;background:inherit}
@@ -350,7 +354,7 @@ body.dark #gm-setup button{color:#062e6f}
   <div id="rec"><button id="rcx" aria-label="Cancel">🗑️</button><span class="dot"></span><span id="rt">0:00</span><button id="rcs" aria-label="Send voice">➤</button></div>
   <div id="emp"></div>
   <footer id="ft">
-    <div class="pill"><button id="emo" aria-label="Emoji">😊</button><input id="in" placeholder="Message likho…" autocomplete="off"><button id="att" aria-label="Photo">📎</button></div>
+    <div class="pill"><button id="emo" aria-label="Emoji">😊</button><textarea id="in" rows="1" placeholder="Message likho…" autocomplete="off"></textarea><button id="att" aria-label="Photo">📎</button></div>
     <button id="send">➤</button>
   </footer>
   <input type="file" id="fi" accept="image/*,video/*" hidden>
@@ -494,8 +498,16 @@ function drawJoin(){
 $('copyid').onclick=function(){ try{ navigator.clipboard.writeText(DID); this.textContent='✔ Copy ho gaya'; }catch(e){ prompt('ID copy karo:',DID); } };
 $('room').value=''; $('peername').value='';
 $('addb').onclick=function(){ var a=$('addbox'); a.style.display=a.style.display==='none'?'block':'none'; };
-$('backb').onclick=function(){ try{saveHist();}catch(e){} location.reload(); };
+$('backb').onclick=function(){ try{saveHist();}catch(e){} try{flushIn();}catch(e){} location.reload(); };
 setTimeout(drawJoin,0);
+var lastIn='';
+function draftSave(){ if(!window._dcOn)return; if(typeof editing!=='undefined'&&editing)return; var r=ls('dc_room'); if(r)ls('dc_draft|'+r,$('in').value||null); }
+function growIn(){ var e=$('in'); if(e.value===lastIn)return; lastIn=e.value; e.style.height='auto'; var h=e.scrollHeight; if(h>0)e.style.height=Math.min(h,132)+'px'; draftSave(); }
+setInterval(growIn,250);
+$('in').addEventListener('input',growIn);
+function flushIn(){ lastIn=null; growIn(); }
+document.addEventListener('visibilitychange',function(){ if(document.hidden)flushIn(); });
+window.addEventListener('pagehide',flushIn);
 /* ---------- doosre contacts ke messages bhi live (background) ---------- */
 var bgq={};
 function bgSub(){
@@ -976,7 +988,7 @@ function start(){
   if(!name)name=DID.slice(3); if(room.length<4){alert('Dost ka ID (ya kam se kam 4 akshar ka chat code) likho');return;}
   var _pid=''; if(/^mc-[a-hj-np-z2-9]{4}-[a-hj-np-z2-9]{4}$/.test(room)){ _pid=room.toUpperCase(); if(_pid===DID){alert('Ye aap ka apna ID hai. Dost ka ID likho.');return;} room=ctRoom(_pid); }
   ls('dc_name',name); ls('dc_room',room); myName=name;
-  var _pn=$('peername').value.trim(); if(_pn)ls('dc_peer|'+room,_pn); ls('dc_peerid',_pid||null); ls('dc_un|'+room,null); if(_pid)saveCt(_pid,_pn);   /* dost ka naam pehle se pata -> offline hone par bhi push jayegi */
+  var _pn=$('peername').value.trim(); if(_pn)ls('dc_peer|'+room,_pn); ls('dc_peerid',_pid||null); ls('dc_un|'+room,null); $('in').value=ls('dc_draft|'+room); window._dcOn=1; if(_pid)saveCt(_pid,_pn);   /* dost ka naam pehle se pata -> offline hone par bhi push jayegi */
   $('join').style.display='none'; $('chat').style.display='flex'; conn='connecting…'; setStatus();
   base='dostchat-v1/'+room;
   loadHist(function(){ render(false); });
@@ -1029,7 +1041,7 @@ function start(){
     }catch(e){}
   });
   $('send').onclick=sendOrMic;
-  $('in').onkeydown=function(e){if(e.key==='Enter')send();};
+  $('in').onkeydown=function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}};
   $('in').oninput=function(){
     updIcon();
     var now=Date.now();
@@ -1442,8 +1454,8 @@ function stGroups(){
   sec.push(T('🔎','Search secret code','Minimize par chat emoji ban jaye, Search mein code likhne par wapas aaye',sqSet(),function(){ if(sqSet())askOldSq(function(){ls('dc_sq',null);maskApply(false);alert('Secret code hata diya');}); else setSq(); }));
   if(sqSet()){
     sec.push(A('🔑','Search secret code badlo','',function(){askOldSq(setSq);},'Badlo'));
-    sec.push(A('😀','Chat abhi emoji karo','',function(){closeSettings();maskApply(true);},'Emoji'));
   }
+  sec.push(A('😀','Chat abhi emoji karo','Chat emoji ban jaye',function(){ $('emob').onclick(); },'Emoji'));
   sec.push(T('⬛','Recent apps mein kaali screen','App minimize karne par 3-line preview kaala dikhe',covEnabled(),function(){ ls('dc_cov',covEnabled()?'0':'1'); }));
   sec.push(T('🕶','Auto black screen','Kuch na chhoo to screen kaali ho jaye, tap par wapas',idle>0,function(){ ls('dc_idle',idle>0?'0':'10'); idleBump(); }));
   if(idle>0)sec.push({k:'s',vals:[2,5,10,30],cur:idle,f:function(v){ ls('dc_idle',String(v)); idleBump(); }});
