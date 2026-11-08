@@ -338,6 +338,7 @@ body.dark #gm-setup button{color:#062e6f}
 <div id="join">
   <div style="display:flex;align-items:center;justify-content:space-between"><h2 style="margin:0">Chats</h2><div id="addb" style="width:42px;height:42px;border-radius:50%;background:#25d366;color:#fff;font-size:28px;line-height:42px;text-align:center;cursor:pointer">+</div></div>
   <div style="margin:0 0 12px;padding:12px;border-radius:12px;background:rgba(127,127,127,.15);font-size:14px">Aapka Device ID (dost ko ye do):<br><b id="myid" style="font-size:20px;letter-spacing:1px"></b> <span id="copyid" style="cursor:pointer;margin-left:8px">📋 Copy</span></div>
+  <div style="font-size:14px;margin:-4px 0 6px"><span id="bk" style="cursor:pointer;color:#008069">💾 Backup</span> &nbsp;&nbsp; <span id="rs" style="cursor:pointer;color:#008069">♻️ Restore</span></div>
   <div id="ctl" style="margin:10px 0"></div>
   <div id="addbox" style="display:none">
   <input id="name" placeholder="Aapka naam (zaroori nahi)" maxlength="20">
@@ -472,13 +473,13 @@ function h53(s,sd){var a=0xdeadbeef^sd,b=0x41c6ce57^sd;for(var i=0,c;i<s.length;
 function pairRoom(a,b){ var k=[a,b].map(function(x){return x.toUpperCase()}).sort().join('|'); return 'p'+h53(k,1)+h53(k,2)+h53(k,3); }
 function ctRoom(id){ return pairRoom(DID,id); }
 function getCts(){ try{ return JSON.parse(ls('dc_cts')||'[]')||[]; }catch(e){ return []; } }
-function saveCt(id,name,keep){ var c=getCts(),o=c.filter(function(x){return x.id===id})[0]; name=(keep&&o&&o.name)?o.name:(name||(o?o.name:'')); if(o&&o.name===name&&c[0]===o)return; c=c.filter(function(x){return x.id!==id}); c.unshift({id:id,name:name}); ls('dc_cts',JSON.stringify(c.slice(0,50))); }
+function saveCt(id,name,keep){ var c=getCts(),o=c.filter(function(x){return x.id===id})[0]; name=(keep&&o&&o.name)?o.name:(name||(o?o.name:'')); if(o&&o.name===name&&c[0]===o)return; c=c.filter(function(x){return x.id!==id}); c.unshift({id:id,name:name,pin:o?o.pin:0}); ls('dc_cts',JSON.stringify(c.slice(0,50))); }
 function drawJoin(){
   $('myid').textContent=DID;
   var l=$('ctl'), cts=getCts();
   if(!cts.length){ l.innerHTML='<div style="color:#667781;font-size:14px;padding:8px 0">Abhi koi chat nahi. Upar + dabao aur dost ka ID likho.</div>'; $('addbox').style.display='block'; return; }
   Promise.all(cts.map(function(c){ return new Promise(function(res){ dbGet('h:dostchat-v1/'+ctRoom(c.id),function(st){ var last=null; try{ var a=(st&&st.all)||{}; Object.keys(a).forEach(function(i){ var m=a[i]; if(m&&!m.deleted&&(!last||m.ts>last.ts))last=m; }); }catch(e){} res({c:c,last:last}); }); }); })).then(function(rows){
-    rows.sort(function(x,y){ return (y.last?y.last.ts:0)-(x.last?x.last.ts:0); });
+    rows.sort(function(x,y){ return ((y.c.pin||0)-(x.c.pin||0))||((y.last?y.last.ts:0)-(x.last?x.last.ts:0)); });
     l.innerHTML='';
     rows.forEach(function(r){
       var c=r.c, m=r.last, u=+ls('dc_un|'+ctRoom(c.id))||0, hue=0, i;
@@ -487,10 +488,11 @@ function drawJoin(){
       var tm=''; if(m){ var d=new Date(m.ts), n=new Date(); tm=d.toDateString()===n.toDateString()?d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString([],{day:'numeric',month:'short'}); }
       var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(127,127,127,.2);cursor:pointer';
       row.innerHTML='<div style="flex:none;width:50px;height:50px;border-radius:50%;color:#fff;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;background:hsl('+hue+',45%,45%)"></div><div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><b class="n" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></b><span class="t" style="font-size:12px;color:'+(u?'#25d366':'#667781')+'"></span></div><div style="display:flex;justify-content:space-between;gap:8px;margin-top:2px"><span class="p" style="font-size:14px;color:#667781;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span><span class="u"></span></div></div>';
-      row.firstChild.textContent=(c.name||c.id.slice(3)).charAt(0).toUpperCase();
-      row.querySelector('.n').textContent=c.name||c.id; row.querySelector('.t').textContent=tm; row.querySelector('.p').textContent=pv;
+      row.firstChild.textContent=(c.name||c.id.slice(3)).charAt(0).toUpperCase(); var pf=ls('dc_pf|'+c.id); if(pf){ row.firstChild.textContent=''; row.firstChild.style.background='url("'+pf+'") center/cover'; }
+      row.querySelector('.n').textContent=(c.pin?'📌 ':'')+(c.name||c.id); row.querySelector('.t').textContent=tm; row.querySelector('.p').textContent=pv;
       if(u){ var ub=row.querySelector('.u'); ub.textContent=u; ub.style.cssText='flex:none;background:#25d366;color:#fff;border-radius:12px;min-width:22px;padding:0 6px;text-align:center;font-size:12px;line-height:22px;font-weight:700'; }
-      row.onclick=function(){ $('room').value=c.id; $('peername').value=c.name||''; start(); };
+      var lp=0,fired=0; row.ontouchstart=function(){ fired=0; lp=setTimeout(function(){ fired=1; ctMenu(c); },550); }; row.ontouchend=row.ontouchmove=row.ontouchcancel=function(){ clearTimeout(lp); }; row.oncontextmenu=function(e){ e.preventDefault(); ctMenu(c); };
+      row.onclick=function(){ if(fired){fired=0;return;} $('room').value=c.id; $('peername').value=c.name||''; start(); };
       l.appendChild(row);
     });
   });
@@ -508,6 +510,27 @@ $('in').addEventListener('input',growIn);
 function flushIn(){ lastIn=null; growIn(); }
 document.addEventListener('visibilitychange',function(){ if(document.hidden)flushIn(); });
 window.addEventListener('pagehide',flushIn);
+function ctSet(f){ var a=getCts(); a=f(a)||a; ls('dc_cts',JSON.stringify(a)); drawJoin(); }
+function ctPhoto(id){ var f=document.createElement('input'); f.type='file'; f.accept='image/*'; f.onchange=function(){ var fl=f.files&&f.files[0]; if(!fl)return; var r=new FileReader(); r.onload=function(){ var im=new Image(); im.onload=function(){ var cv=document.createElement('canvas'); cv.width=cv.height=96; var z=Math.min(im.width,im.height); cv.getContext('2d').drawImage(im,(im.width-z)/2,(im.height-z)/2,z,z,0,0,96,96); ls('dc_pf|'+id,cv.toDataURL('image/jpeg',0.7)); drawJoin(); }; im.src=r.result; }; r.readAsDataURL(fl); }; f.click(); }
+function ctMenu(c){
+  var o=document.createElement('div'); o.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:flex-end;justify-content:center';
+  var b=document.createElement('div'); b.style.cssText='background:#fff;color:#111;width:100%;max-width:420px;border-radius:16px 16px 0 0;padding:8px 0 max(12px,env(safe-area-inset-bottom));font:16px sans-serif';
+  function it(t,f){ var d=document.createElement('div'); d.textContent=t; d.style.cssText='padding:14px 20px;cursor:pointer'; d.onclick=function(){ document.body.removeChild(o); f(); }; b.appendChild(d); }
+  var h=document.createElement('div'); h.textContent=c.name||c.id; h.style.cssText='padding:8px 20px;font-weight:700;color:#667781'; b.appendChild(h);
+  it('✏️ Naam badlo',function(){ var n=prompt('Naya naam',c.name||''); if(n!==null)ctSet(function(a){ a.forEach(function(x){ if(x.id===c.id)x.name=n.trim(); }); }); });
+  it(c.pin?'📌 Pin hatao':'📌 Pin karo',function(){ ctSet(function(a){ a.forEach(function(x){ if(x.id===c.id)x.pin=x.pin?0:1; }); }); });
+  it('🖼️ Photo lagao',function(){ ctPhoto(c.id); });
+  it('🗑️ List se hatao',function(){ if(confirm('Ye dost list se hata dein? Chat ki history phone mein rahegi.'))ctSet(function(a){ return a.filter(function(x){return x.id!==c.id}); }); });
+  o.onclick=function(e){ if(e.target===o)document.body.removeChild(o); };
+  o.appendChild(b); document.body.appendChild(o);
+}
+$('bk').onclick=function(){ var code='MCBK1:'+btoa(unescape(encodeURIComponent(JSON.stringify({d:DID,c:getCts(),n:ls('dc_name')})))); try{ navigator.clipboard.writeText(code); alert('Backup code copy ho gaya. Kisi safe jagah save kar lo.'); }catch(e){ prompt('Ye backup code copy karo:',code); } };
+$('rs').onclick=function(){ var code=prompt('Backup code yahan paste karo'); if(!code)return; try{ var j=JSON.parse(decodeURIComponent(escape(atob(code.trim().slice(6))))); if(!/^MC-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(j.d))throw 0; if(!confirm('Is device ka ID badal kar '+j.d+' ho jayega. Aage barhein?'))return; ls('dc_did',j.d); ls('dc_cts',JSON.stringify(j.c||[])); if(j.n)ls('dc_name',j.n); location.reload(); }catch(e){ alert('Ye backup code sahi nahi lag raha.'); } };
+function disH(){ return +ls('dc_dis')||0; }
+function disLbl(){ var h=disH(); return h?(h>=168?'7 din':'24 ghante'):'Off'; }
+function disCycle(){ var h=disH(); ls('dc_dis',h?(h<168?'168':null):'24'); try{stRefresh();}catch(e){} disSweep(); }
+function disSweep(){ var h=disH(); if(!h||!window._dcOn)return; var lim=Date.now()-h*3600000, ch=0; Object.keys(all).forEach(function(i){ if(all[i]&&all[i].ts<lim){ delete all[i]; ch=1; } }); if(ch){ try{render(true);}catch(e){} try{saveHist();}catch(e){} } }
+setInterval(disSweep,60000); setTimeout(disSweep,4000);
 /* ---------- doosre contacts ke messages bhi live (background) ---------- */
 var bgq={};
 function bgSub(){
@@ -757,6 +780,9 @@ function voiceEl(v){
   lbl.textContent=fmt(p.a.paused&&!p.a.currentTime?v.dur:p.a.currentTime);
   fill.style.width=Math.min(100,p.a.currentTime/(v.dur||1)*100)+'%';
   p.ui={btn:btn,fill:fill,lbl:lbl};
+  var spd=document.createElement('span'); spd.style.cssText='margin-left:6px;font-size:12px;font-weight:700;padding:2px 6px;border-radius:10px;background:rgba(127,127,127,.25);cursor:pointer'; spd.textContent=p.a.playbackRate+'x';
+  spd.onclick=function(e){ e.stopPropagation(); var r=p.a.playbackRate>=2?1:(p.a.playbackRate>=1.5?2:1.5); p.a.playbackRate=r; spd.textContent=r+'x'; };
+  setTimeout(function(){ if(lbl.parentNode)lbl.parentNode.appendChild(spd); },0);
   btn.onclick=function(e){
     e.stopPropagation();
     if(p.a.paused){
@@ -1488,6 +1514,7 @@ function stGroups(){
     ['Chat',[
       A('🆔','Mera Device ID',DID+'  (dost ko ye do)',function(){ try{navigator.clipboard.writeText(DID);alert('ID copy ho gaya: '+DID);}catch(e){prompt('ID copy karo:',DID);} },'Copy'),
       A('🚪','Doosra dost chuno','Contacts list mein wapas jao',function(){location.reload();},'Badlo'),
+      A('⏳','Disappearing messages','Abhi: '+disLbl()+' (sirf is device par)',disCycle,'Badlo'),
       A('🧹','Chat saaf karo','Sirf is device se saari chat hatao',clearChatAsk,'Saaf',true)
     ]]
   ];
