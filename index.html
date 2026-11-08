@@ -28,7 +28,7 @@ header{background:#008069;color:#fff;padding:10px 6px 10px 12px;display:flex;ali
 #more:active{background:rgba(255,255,255,.15)}
 
 /* join */
-#join{margin:auto;width:min(92%,360px);background:#fff;padding:22px;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.12)}
+#join{margin:auto;max-height:94vh;overflow:auto;width:min(92%,360px);background:#fff;padding:22px;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.12)}
 #join h2{margin:0 0 14px}
 #join input{width:100%;margin-bottom:10px;padding:12px;border:1px solid #ccc;border-radius:10px;font:inherit}
 #join button{width:100%;padding:12px;border:0;border-radius:10px;background:#008069;color:#fff;font-weight:600}
@@ -51,7 +51,7 @@ body.dark #sq{background:#202c33;color:#e9edef}
 .m.first.me{border-top-right-radius:0}
 .m.flash{animation:fl 1.1s}
 @keyframes fl{0%,60%{box-shadow:0 0 0 100vmax rgba(0,128,105,.18) inset}100%{box-shadow:0 1px .5px rgba(11,20,26,.13)}}
-.n{display:block;font-size:12.5px;font-weight:600;color:#06cf9c;padding-right:18px}
+.n{display:block;font-size:12.5px;font-weight:600;color:#06cf9c}
 .tx{display:inline}
 .meta{float:right;margin:6px 0 -2px 10px;font-size:11px;color:#667781;white-space:nowrap;line-height:1.2}
 .meta i{font-style:normal;margin-right:3px}
@@ -121,16 +121,20 @@ body.dark #join{background:#202c33;color:#e9edef}
 body.dark #join input{background:#2a3942;color:#e9edef;border-color:#2a3942}
 
 /* voice */
-.vc{display:flex;align-items:center;gap:8px;width:215px;max-width:100%;padding:2px 4px 2px 0}
-.vp{flex:none;width:36px;height:36px;border-radius:50%;border:0;background:#3b4a54;color:#fff;font-size:14px;padding:0}
-.vc.h .vp{background:#34b7f1}
-.vc.h .vb i b,.vc.h .vb i b::after{background:#34b7f1}
-body.dark .vc:not(.h) .vp{background:#8696a0;color:#111b21}
-body.dark .vc:not(.h) .vb i b,body.dark .vc:not(.h) .vb i b::after{background:#8696a0}
+.vc{display:flex;align-items:center;gap:8px;width:215px;max-width:100%;padding:2px 0}
+.vp{flex:none;width:36px;height:36px;border-radius:50%;border:0;background:#111;color:#fff;font-size:14px;padding:0}
 .vb{flex:1;height:22px;display:flex;align-items:center;cursor:pointer}
 .vb i{display:block;width:100%;height:4px;border-radius:2px;background:rgba(11,20,26,.18);position:relative}
-.vb i b{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:2px;background:#3b4a54}
-.vb i b::after{content:"";position:absolute;right:-5px;top:-3px;width:10px;height:10px;border-radius:50%;background:#3b4a54}
+.vb i b{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:2px;background:#111}
+.vb i b::after{content:"";position:absolute;right:-5px;top:-3px;width:10px;height:10px;border-radius:50%;background:#111}
+/* voice: na suni = kaala/safed, suni gayi = neela */
+.vc.pl .vp{background:#34b7f1}
+.vc.pl .vb i b{background:#34b7f1}
+.vc.pl .vb i b::after{background:#34b7f1}
+body.dark .vp{background:#e9edef;color:#111}
+body.dark .vb i b,body.dark .vb i b::after{background:#e9edef}
+body.dark .vc.pl .vp{background:#34b7f1;color:#fff}
+body.dark .vc.pl .vb i b,body.dark .vc.pl .vb i b::after{background:#34b7f1}
 .vl{flex:none;font-size:12px;color:#667781;min-width:32px;text-align:right}
 #rec{display:none;align-items:center;gap:12px;padding:8px 12px;background:#f0f2f5;padding-bottom:max(8px,env(safe-area-inset-bottom))}
 #rec .dot{width:11px;height:11px;border-radius:50%;background:#e53935;animation:bl 1s infinite}
@@ -188,7 +192,6 @@ body.dark #setp .red .pb.act{color:#ff8a80}
 
 /* video call */
 #vcall,#acall,#emob,#clrb{background:none;border:0;color:#fff;font-size:20px;width:38px;height:40px;border-radius:50%;padding:0;flex:none}
-#emob,#clrb{display:none}
 #vcall:active,#acall:active,#emob:active,#clrb:active{background:rgba(255,255,255,.15)}
 #ringbar{display:none;position:fixed;left:10px;right:10px;top:max(10px,env(safe-area-inset-top));z-index:120;background:#1c2530;color:#fff;border-radius:14px;padding:10px 12px;align-items:center;justify-content:space-between;box-shadow:0 4px 18px rgba(0,0,0,.35)}
 #ringbar .rb-txt small{display:block;opacity:.7;font-size:12px}
@@ -318,6 +321,7 @@ body.dark #gm-setup button{color:#062e6f}
 </head>
 <body>
 <header>
+  <button id="backb" aria-label="Back" style="background:none;border:0;color:#fff;font-size:26px;padding:0 4px;cursor:pointer">←</button>
   <div class="av" id="avt">💬</div>
   <div class="hd"><b id="ttl">Dost Chat</b><small id="st"></small></div>
   <button id="emob" aria-label="Chat emoji karo">😀</button>
@@ -328,12 +332,15 @@ body.dark #gm-setup button{color:#062e6f}
 </header>
 
 <div id="join">
-  <h2>Chat shuru karo</h2>
-  <input id="name" placeholder="Aapka naam" maxlength="20">
-  <input id="room" placeholder="Chat code (lamba aur secret, jaise: ali-sara-7391)" maxlength="40">
-  <input id="peername" placeholder="Dost ka naam (jo wo apne naam mein likhega)" maxlength="20">
+  <div style="display:flex;align-items:center;justify-content:space-between"><h2 style="margin:0">Chats</h2><div id="addb" style="width:42px;height:42px;border-radius:50%;background:#25d366;color:#fff;font-size:28px;line-height:42px;text-align:center;cursor:pointer">+</div></div>
+  <div style="margin:0 0 12px;padding:12px;border-radius:12px;background:rgba(127,127,127,.15);font-size:14px">Aapka Device ID (dost ko ye do):<br><b id="myid" style="font-size:20px;letter-spacing:1px"></b> <span id="copyid" style="cursor:pointer;margin-left:8px">📋 Copy</span></div>
+  <div id="ctl" style="margin:10px 0"></div>
+  <div id="addbox" style="display:none">
+  <input id="name" placeholder="Aapka naam (zaroori nahi)" maxlength="20">
+  <input id="room" placeholder="Dost ka Device ID (MC-XXXX-XXXX) ya purana chat code" maxlength="40">
+  <input id="peername" placeholder="Dost ka naam (zaroori nahi, sirf apni pehchan ke liye)" maxlength="20">
   <button id="go">Chat kholo</button>
-  <p>Dost ko bhi yehi chat code batao. Jis ka code same hoga wahi chat dekh sakta hai.</p>
+  <p>Dost ka ID likho aur Chat kholo. Dost bhi aap ka ID likhe. Ek baar ke baad dost upar list mein aa jayega, bas tap karo. Purana chat code ab bhi chalta hai.</p></div>
 </div>
 
 <div id="chat">
@@ -346,9 +353,7 @@ body.dark #gm-setup button{color:#062e6f}
     <div class="pill"><button id="emo" aria-label="Emoji">😊</button><input id="in" placeholder="Message likho…" autocomplete="off"><button id="att" aria-label="Photo">📎</button></div>
     <button id="send">➤</button>
   </footer>
-  <input type="file" id="fi" accept="image/*" hidden>
-  <input type="file" id="fv" accept="video/*" hidden>
-  <input type="file" id="fc" accept="image/*" capture="environment" hidden>
+  <input type="file" id="fi" accept="image/*,video/*" hidden>
 </div>
 
 <div id="menu"></div>
@@ -457,8 +462,77 @@ var $=function(i){return document.getElementById(i)};
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k)||'';if(v===null){localStorage.removeItem(k);return ''}localStorage.setItem(k,v)}catch(e){return ''}}
 $('name').value=ls('dc_name'); $('room').value=ls('dc_room'); $('peername').value=ls('dc_peer|'+ls('dc_room'));
 var cid=ls('dc_cid'); if(!cid){cid=Math.random().toString(36).slice(2,10); ls('dc_cid',cid);}
+/* ---------- Device ID + contacts ---------- */
+var DID=(function(){ var d=ls('dc_did'); if(!/^MC-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(d)){ var AL='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',b=new Uint8Array(8),t='',i; try{crypto.getRandomValues(b)}catch(e){for(i=0;i<8;i++)b[i]=Math.random()*256} for(i=0;i<8;i++)t+=AL[b[i]&31]; d='MC-'+t.slice(0,4)+'-'+t.slice(4); ls('dc_did',d); } return d; })();
+function h53(s,sd){var a=0xdeadbeef^sd,b=0x41c6ce57^sd;for(var i=0,c;i<s.length;i++){c=s.charCodeAt(i);a=Math.imul(a^c,2654435761);b=Math.imul(b^c,1597334677);}a=Math.imul(a^(a>>>16),2246822507)^Math.imul(b^(b>>>13),3266489909);b=Math.imul(b^(b>>>16),2246822507)^Math.imul(a^(a>>>13),3266489909);return(4294967296*(2097151&b)+(a>>>0)).toString(36);}
+function pairRoom(a,b){ var k=[a,b].map(function(x){return x.toUpperCase()}).sort().join('|'); return 'p'+h53(k,1)+h53(k,2)+h53(k,3); }
+function ctRoom(id){ return pairRoom(DID,id); }
+function getCts(){ try{ return JSON.parse(ls('dc_cts')||'[]')||[]; }catch(e){ return []; } }
+function saveCt(id,name,keep){ var c=getCts(),o=c.filter(function(x){return x.id===id})[0]; name=(keep&&o&&o.name)?o.name:(name||(o?o.name:'')); if(o&&o.name===name&&c[0]===o)return; c=c.filter(function(x){return x.id!==id}); c.unshift({id:id,name:name}); ls('dc_cts',JSON.stringify(c.slice(0,50))); }
+function drawJoin(){
+  $('myid').textContent=DID;
+  var l=$('ctl'), cts=getCts();
+  if(!cts.length){ l.innerHTML='<div style="color:#667781;font-size:14px;padding:8px 0">Abhi koi chat nahi. Upar + dabao aur dost ka ID likho.</div>'; $('addbox').style.display='block'; return; }
+  Promise.all(cts.map(function(c){ return new Promise(function(res){ dbGet('h:dostchat-v1/'+ctRoom(c.id),function(st){ var last=null; try{ var a=(st&&st.all)||{}; Object.keys(a).forEach(function(i){ var m=a[i]; if(m&&!m.deleted&&(!last||m.ts>last.ts))last=m; }); }catch(e){} res({c:c,last:last}); }); }); })).then(function(rows){
+    rows.sort(function(x,y){ return (y.last?y.last.ts:0)-(x.last?x.last.ts:0); });
+    l.innerHTML='';
+    rows.forEach(function(r){
+      var c=r.c, m=r.last, u=+ls('dc_un|'+ctRoom(c.id))||0, hue=0, i;
+      for(i=0;i<c.id.length;i++)hue=(hue*31+c.id.charCodeAt(i))%360;
+      var pv=m?((m.cid===cid?'You: ':'')+(m.audio?'🎤 Voice message':m.video?'🎥 Video':(m.img&&m.text==='📷 Photo')?'📷 Photo':String(m.text||''))):c.id;
+      var tm=''; if(m){ var d=new Date(m.ts), n=new Date(); tm=d.toDateString()===n.toDateString()?d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString([],{day:'numeric',month:'short'}); }
+      var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(127,127,127,.2);cursor:pointer';
+      row.innerHTML='<div style="flex:none;width:50px;height:50px;border-radius:50%;color:#fff;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;background:hsl('+hue+',45%,45%)"></div><div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><b class="n" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></b><span class="t" style="font-size:12px;color:'+(u?'#25d366':'#667781')+'"></span></div><div style="display:flex;justify-content:space-between;gap:8px;margin-top:2px"><span class="p" style="font-size:14px;color:#667781;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span><span class="u"></span></div></div>';
+      row.firstChild.textContent=(c.name||c.id.slice(3)).charAt(0).toUpperCase();
+      row.querySelector('.n').textContent=c.name||c.id; row.querySelector('.t').textContent=tm; row.querySelector('.p').textContent=pv;
+      if(u){ var ub=row.querySelector('.u'); ub.textContent=u; ub.style.cssText='flex:none;background:#25d366;color:#fff;border-radius:12px;min-width:22px;padding:0 6px;text-align:center;font-size:12px;line-height:22px;font-weight:700'; }
+      row.onclick=function(){ $('room').value=c.id; $('peername').value=c.name||''; start(); };
+      l.appendChild(row);
+    });
+  });
+}
+$('copyid').onclick=function(){ try{ navigator.clipboard.writeText(DID); this.textContent='✔ Copy ho gaya'; }catch(e){ prompt('ID copy karo:',DID); } };
+$('room').value=''; $('peername').value='';
+$('addb').onclick=function(){ var a=$('addbox'); a.style.display=a.style.display==='none'?'block':'none'; };
+$('backb').onclick=function(){ try{saveHist();}catch(e){} location.reload(); };
+setTimeout(drawJoin,0);
+/* ---------- doosre contacts ke messages bhi live (background) ---------- */
+var bgq={};
+function bgSub(){
+  if(!client)return;
+  getCts().forEach(function(c){ var r=ctRoom(c.id); if(r===ls('dc_room'))return; try{ client.subscribe('dostchat-v1/'+r+'/msg',{qos:1}); client.subscribe('dostchat-v1/'+r+'/r/+',{qos:1}); }catch(e){} });
+}
+function openContact(id){ if(!id||ls('dc_peerid')===id)return; ls('dc_open',id); try{saveHist();}catch(e){} location.reload(); }
+function bgBanner(ct){
+  var vis=$('chat').style.display==='flex'&&!(typeof mailOpen==='function'&&mailOpen())&&!document.hidden; if(!vis)return;
+  var b=$('bgb'); if(!b){ b=document.createElement('div'); b.id='bgb'; b.style.cssText='position:fixed;left:10px;right:10px;top:max(10px,env(safe-area-inset-top));z-index:99997;background:#1f2933;color:#fff;padding:12px 14px;border-radius:12px;font:15px sans-serif;display:none;box-shadow:0 4px 16px rgba(0,0,0,.4)'; document.body.appendChild(b); }
+  b.textContent='💬 '+(ct.name||'Dost')+' ka naya message. Tap karo'; b.style.display='block'; b.onclick=function(){ b.style.display='none'; openContact(ct.id); };
+  clearTimeout(b._t); b._t=setTimeout(function(){b.style.display='none'},6000);
+}
+function bgMsg(topic,payload){
+  try{
+    var m=/^dostchat-v1\/([^\/]+)\/(msg|r\/.+)$/.exec(topic); if(!m)return;
+    var raw=payload.toString(); if(!raw)return;
+    var d=JSON.parse(raw), room=m[1], bb='dostchat-v1/'+room;
+    if(!d||!d.id||d.cid===cid)return;
+    var ct=getCts().filter(function(c){return ctRoom(c.id)===room})[0]; if(!ct)return;
+    bgq[room]=(bgq[room]||Promise.resolve()).then(function(){ return new Promise(function(res){
+      dbGet('h:'+bb,function(st){
+        st=st||{}; st.all=st.all||{};
+        if(!st.all[d.id]){
+          st.all[d.id]=d; dbPut('h:'+bb,st);
+          ls('dc_un|'+room,String((+ls('dc_un|'+room)||0)+1));
+          try{ client.publish(bb+'/seen',JSON.stringify({cid:cid,dlv:[d.id],ids:[]}),{qos:0}); }catch(e){}
+          showNotif('New email','dc-msg-'+room,{id:ct.id}); bgBanner(ct);
+        }
+        try{ client.publish(bb+'/r/'+d.id,'',{qos:1,retain:true}); }catch(e){}
+        res();
+      });
+    }); });
+  }catch(e){}
+}
 
-var all={}, seen={}, sentSeen={}, edits={}, dels={}, typers={}, dlv={}, reacts={}, hidden={}, heard={}, peer=null;
+var all={}, seen={}, sentSeen={}, edits={}, dels={}, typers={}, dlv={}, reacts={}, hidden={}, played={}, peer=null;
 var client=null, base='', myName='', conn='', replyTo=null, editing=null, lastTyping=0;
 
 /* ---------- chat history is device par save hoti hai (IndexedDB) ---------- */
@@ -484,7 +558,7 @@ function saveHist(){
     if(++n>5000||size>80e6)break;
     keep[ids[i]]=m;
   }
-  dbPut(histKey,{all:keep,hidden:hidden,edits:edits,dels:dels,reacts:reacts,seen:seen,dlv:dlv,heard:heard});
+  dbPut(histKey,{all:keep,hidden:hidden,edits:edits,dels:dels,reacts:reacts,seen:seen,dlv:dlv,played:played});
 }
 function scheduleSave(){ if(!histKey||saveT)return; saveT=setTimeout(function(){saveT=null;saveHist();},800); }
 function loadHist(cb){
@@ -497,7 +571,7 @@ function loadHist(cb){
         Object.keys(st.dels||{}).forEach(function(i){ if(!dels[i])dels[i]=st.dels[i]; });
         Object.keys(st.seen||{}).forEach(function(i){ seen[i]=1; });
         Object.keys(st.dlv||{}).forEach(function(i){ dlv[i]=1; });
-        Object.keys(st.heard||{}).forEach(function(i){ heard[i]=1; });
+        Object.keys(st.played||{}).forEach(function(i){ played[i]=1; });
         Object.keys(st.reacts||{}).forEach(function(i){ reacts[i]=reacts[i]||{}; Object.keys(st.reacts[i]).forEach(function(c){ if(!reacts[i][c])reacts[i][c]=st.reacts[i][c]; }); });
       }
     }catch(e){}
@@ -613,9 +687,7 @@ function render(keepScroll){
     if(mine&&!isDel){var k=document.createElement('span');k.className='tk'+(seen[v.id]?' s':'');k.textContent=(seen[v.id]||dlv[v.id])?'\u2713\u2713':'\u2713';t.appendChild(k);}
     el.appendChild(t);
     if(rxs.length&&!isDel){var rx=document.createElement('span');rx.className='rx';rx.textContent=rxs.join('')+(rxs.length>1?' '+rxs.length:'');el.appendChild(rx);}
-    if(!isDel){
-      attachSwipe(el,v);
-    }
+    if(!isDel){ attachSwipe(el,v); }   /* menu: message ko dabaye rakho (hold) */
     box.appendChild(el); prev=v;
   });
   if(atBottom||!keepScroll)box.scrollTop=box.scrollHeight; else box.scrollTop=oldTop;
@@ -665,7 +737,7 @@ function voiceEl(v){
     a.onended=function(){ a.currentTime=0; if(p.ui){p.ui.btn.textContent='▶';p.ui.fill.style.width='0';p.ui.lbl.textContent=fmt(v.dur);} };
     players[v.id]=p;
   }
-  var w=document.createElement('div');w.className='vc'+(heard[v.id]?' h':'');
+  var w=document.createElement('div');w.className='vc'+(played[v.id]?' pl':'');
   var btn=document.createElement('button');btn.className='vp';btn.textContent=p.a.paused?'▶':'⏸';
   var bar=document.createElement('div');bar.className='vb';
   var tr=document.createElement('i'),fill=document.createElement('b');tr.appendChild(fill);bar.appendChild(tr);
@@ -678,7 +750,8 @@ function voiceEl(v){
     if(p.a.paused){
       Object.keys(players).forEach(function(k){ if(players[k]!==p&&!players[k].a.paused){players[k].a.pause();if(players[k].ui)players[k].ui.btn.textContent='▶';} });
       p.a.play().catch(function(){}); btn.textContent='⏸';
-      if(v.cid!==cid&&!heard[v.id]){ heard[v.id]=1; w.classList.add('h'); scheduleSave(); if(client&&client.connected)client.publish(base+'/h/'+v.id,JSON.stringify({id:v.id,cid:cid}),{qos:1,retain:true}); }
+      /* samne wale ne voice suni -> dono taraf neela */
+      if(v.cid!==cid&&!played[v.id]){ played[v.id]=1; w.classList.add('pl'); pub('played',{cid:cid,ids:[v.id]}); scheduleSave(); }
     } else { p.a.pause(); btn.textContent='▶'; }
   };
   bar.onclick=function(e){
@@ -691,7 +764,7 @@ function voiceEl(v){
 function stopPlayers(){ Object.keys(players).forEach(function(k){try{players[k].a.pause()}catch(_){}}); players={}; }
 
 function startRec(){
-  if(rec||!client||!client.connected)return;
+  if(rec||!client)return;
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){alert(mediaErr({name:'NoMedia'},false));return;}
   if(!window.MediaRecorder){alert('Is browser mein voice record nahi ho sakti. Chrome ya Safari (naya version) use karo.');return;}
   askMedia(false).then(function(stream){
@@ -732,7 +805,7 @@ function sendVoice(dataUrl,dur){
   if(replyTo)msg.reply={id:replyTo.id,cid:replyTo.cid,name:replyTo.name,text:clip(replyTo.text,120)};
   replyTo=null; updateBar();
   merge([msg]); $('msgs').scrollTop=$('msgs').scrollHeight;
-  qsend(msg);
+  if(client)client.publish(base+'/msg',JSON.stringify(msg),{qos:1});
 }
 
 function dayLabel(ts){var d=new Date(ts),n=new Date(),y=new Date(Date.now()-864e5);
@@ -757,7 +830,7 @@ function sendImage(d){
   if(replyTo)msg.reply={id:replyTo.id,cid:replyTo.cid,name:replyTo.name,text:clip(replyTo.text,120)};
   $('in').value='';replyTo=null;updateBar();
   merge([msg]); $('msgs').scrollTop=$('msgs').scrollHeight;
-  qsend(msg);
+  if(client)client.publish(base+'/msg',JSON.stringify(msg),{qos:1});
 }
 function presPing(){ if(client&&client.connected&&myName)client.publish(base+'/pres',JSON.stringify({cid:cid,name:myName}),{qos:0}); }
 setInterval(presPing,8000);
@@ -805,30 +878,12 @@ function applyMods(m){
   if(dels[m.id]&&dels[m.id]===m.cid){m.deleted=1;}
 }
 function merge(arr){ var ch=false; arr.forEach(function(m){ if(m&&m.id&&!all[m.id]){applyMods(m);all[m.id]=m;ch=true;} }); if(ch)render(true); }
-var pend={}; try{ pend=JSON.parse(ls('dc_pend')||'{}'); }catch(e){ pend={}; }
-function savePend(){ ls('dc_pend',Object.keys(pend).length?JSON.stringify(pend):null); }
-function qsend(msg){
-  if(client&&client.connected)client.publish(base+'/msg',JSON.stringify(msg),{qos:1});
-  else{ pend[msg.id]=1; savePend(); }
-}
-function flushPend(){
-  if(!client||!client.connected)return;
-  Object.keys(pend).forEach(function(id){
-    var m=all[id]; delete pend[id];
-    if(m&&!m.deleted&&m.cid===cid&&!m.vn)client.publish(base+'/msg',JSON.stringify(m),{qos:1});
-  });
-  savePend();
-}
-function pub(topic,obj){ if(client&&client.connected)client.publish(base+'/'+topic,JSON.stringify(obj),{qos:1}); }
+function pub(topic,obj){ if(client)client.publish(base+'/'+topic,JSON.stringify(obj),{qos:1}); }
 function sendSeen(ids){
   ids=ids.filter(function(i){return !sentSeen[i]});
   if(!ids.length||!client||!client.connected)return;
   ids.forEach(function(i){sentSeen[i]=1});
   pub('seen',{cid:cid,ids:ids});
-}
-function dlvAll(){
-  var ids=Object.keys(all).filter(function(i){return all[i].cid!==cid&&!all[i].deleted}).sort(function(a,b){return all[b].ts-all[a].ts}).slice(0,150);
-  if(ids.length)pub('seen',{cid:cid,dlv:ids,ids:[]});
 }
 function seenAll(){ sendSeen(Object.keys(all).filter(function(i){return all[i].cid!==cid&&!all[i].deleted})); }
 
@@ -838,6 +893,67 @@ function delMsg(id){
   m.deleted=1; dels[id]=cid; pub('del',{id:id,cid:cid});
   if(editing===id)cancelBar();
   render(true);
+}
+
+/* ---------- connection: 2 broker saath (ek band ho to doosra chalta rahe) + offline outbox ---------- */
+var BROKERS=['wss://broker.hivemq.com:8884/mqtt','wss://broker.emqx.io:8084/mqtt'];
+function pickClientId(){
+  /* ek hi device par 2 tab/PWA ho to same clientId se broker ek ko kick karta rehta hai (reconnecting loop) */
+  var inst=Math.random().toString(36).slice(2,6), id='dc_'+cid;
+  try{
+    var h=(ls('dc_live')||'').split('|');
+    if(h[0]&&Date.now()-(+h[1]||0)<9000) id+='_'+inst;
+  }catch(e){}
+  if(id==='dc_'+cid){ var beat=function(){ ls('dc_live',inst+'|'+Date.now()); }; beat(); setInterval(beat,3000); }
+  return id;
+}
+function MultiMqtt(id){
+  var self=this, cons=[], hs={}, outbox=[], rtcSeen={};
+  function emit(n,a,b,c){ (hs[n]||[]).forEach(function(f){ try{f(a,b,c)}catch(e){} }); }
+  function any(){ return cons.some(function(c){return c.connected}); }
+  function flush(){
+    var q=outbox; outbox=[];
+    q.forEach(function(o){ self.publish(o.t,o.m,o.o); });
+  }
+  Object.defineProperty(self,'connected',{get:any});
+  Object.defineProperty(self,'reconnecting',{get:function(){return cons.some(function(c){return c.reconnecting});}});
+  self.on=function(n,f){ (hs[n]=hs[n]||[]).push(f); return self; };
+  self.publish=function(topic,msg,opts,cb){
+    var sent=false;
+    cons.forEach(function(c){ if(c.connected){ sent=true; try{ c.publish(topic,msg,opts); }catch(e){} } });
+    if(!sent&&opts&&opts.qos===1){ outbox.push({t:topic,m:msg,o:opts}); if(outbox.length>300)outbox.shift(); }
+    if(cb)try{cb()}catch(e){}
+    return self;
+  };
+  self.subscribe=function(t,o,cb){ cons.forEach(function(c){ if(c.connected){ try{ c.subscribe(t,o); }catch(e){} } }); return self; };
+  self.reconnect=function(){ cons.forEach(function(c){ if(!c.connected){ try{ c.reconnect(); }catch(e){} } }); };
+  self.stream={destroy:function(){ cons.forEach(function(c){ try{ c.stream.destroy(); }catch(e){ try{ c.reconnect(); }catch(_){} } }); }};
+  BROKERS.forEach(function(url){
+    var c=mqtt.connect(url,{reconnectPeriod:2000,connectTimeout:10000,keepalive:20,resubscribe:true,clean:false,clientId:id});
+    cons.push(c);
+    c.on('connect',function(){ emit('connect'); flush(); });
+    c.on('reconnect',function(){ if(!any())emit('reconnect'); });
+    c.on('offline',function(){ if(!any())emit('offline'); });
+    c.on('close',function(){ if(!any())emit('offline'); });
+    c.on('error',function(){});
+    c.on('message',function(tp,pl,pk){
+      if(/\/rtc$/.test(tp)){   /* call signalling 2 broker se aaye to ek hi baar chalao */
+        var k=pl.toString(), n=Date.now();
+        if(rtcSeen[k]&&n-rtcSeen[k]<30000)return;
+        rtcSeen[k]=n; Object.keys(rtcSeen).forEach(function(x){ if(n-rtcSeen[x]>60000)delete rtcSeen[x]; });
+      }
+      emit('message',tp,pl,pk);
+    });
+  });
+}
+var lastAck=0;
+function resendAcks(){
+  /* delivered / played ki khabar dobara bhejo (pehli wali net ki wajah se kho gayi ho to) */
+  var n=Date.now(); if(n-lastAck<5000)return; lastAck=n;
+  var ids=Object.keys(all).filter(function(i){var m=all[i];return m&&m.cid!==cid&&!m.deleted}).sort(function(a,b){return all[b].ts-all[a].ts}).slice(0,60);
+  if(ids.length)pub('seen',{cid:cid,dlv:ids,ids:ids.filter(function(i){return sentSeen[i]})});
+  var pl=ids.filter(function(i){return played[i]&&all[i].audio});
+  if(pl.length)pub('played',{cid:cid,ids:pl});
 }
 
 function send(){
@@ -851,56 +967,22 @@ function send(){
   if(replyTo)msg.reply={id:replyTo.id,cid:replyTo.cid,name:replyTo.name,text:clip(replyTo.text,120)};
   $('in').value=''; replyTo=null; updateBar(); lastTyping=0;
   merge([msg]); $('msgs').scrollTop=$('msgs').scrollHeight;
-  qsend(msg);
+  client.publish(base+'/msg',JSON.stringify(msg),{qos:1});
   $('in').focus();
 }
 
 function start(){
   var name=$('name').value.trim(), room=$('room').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g,'');
-  if(!name||room.length<4){alert('Naam likho aur kam se kam 4 akshar ka chat code do');return;}
+  if(!name)name=DID.slice(3); if(room.length<4){alert('Dost ka ID (ya kam se kam 4 akshar ka chat code) likho');return;}
+  var _pid=''; if(/^mc-[a-hj-np-z2-9]{4}-[a-hj-np-z2-9]{4}$/.test(room)){ _pid=room.toUpperCase(); if(_pid===DID){alert('Ye aap ka apna ID hai. Dost ka ID likho.');return;} room=ctRoom(_pid); }
   ls('dc_name',name); ls('dc_room',room); myName=name;
-  var _pn=$('peername').value.trim(); if(_pn)ls('dc_peer|'+room,_pn);   /* dost ka naam pehle se pata -> offline hone par bhi push jayegi */
+  var _pn=$('peername').value.trim(); if(_pn)ls('dc_peer|'+room,_pn); ls('dc_peerid',_pid||null); ls('dc_un|'+room,null); if(_pid)saveCt(_pid,_pn);   /* dost ka naam pehle se pata -> offline hone par bhi push jayegi */
   $('join').style.display='none'; $('chat').style.display='flex'; conn='connecting…'; setStatus();
   base='dostchat-v1/'+room;
   loadHist(function(){ render(false); });
   setTimeout(ntfyFirstRun,2500); setTimeout(pushRegister,3000);
-  /* do brokers saath (HiveMQ + EMQX): ek band ho to doosra chalta rahe. Neeche ka `client` in dono ko ek jaisa dikhata hai */
-  var BROKERS=['wss://broker.hivemq.com:8884/mqtt','wss://broker.emqx.io:8084/mqtt'];
-  var reals=[];
-  BROKERS.forEach(function(u){
-    try{
-      var c=mqtt.connect(u,{reconnectPeriod:2000,connectTimeout:10000,keepalive:20,resubscribe:true,clean:true,clientId:'dc_'+cid+'_'+Math.random().toString(36).slice(2,8)});
-      c._rx=Date.now(); c._down=0; c.on('packetreceive',function(){c._rx=Date.now();}); reals.push(c);
-    }catch(e){}
-  });
-  var rtcSeen={};
-  client={
-    get connected(){ return reals.some(function(c){return c.connected}); },
-    get reconnecting(){ return reals.some(function(c){return c.reconnecting}); },
-    stream:{destroy:function(){ reals.forEach(function(c){ try{c.stream.destroy();}catch(e){} }); }},
-    publish:function(t,pl,o,cb){ reals.forEach(function(c){ if(c.connected){ try{ c.publish(t,pl,o); }catch(e){} } }); if(typeof cb==='function')cb(); },
-    subscribe:function(){ var a=arguments; reals.forEach(function(c){ if(c.connected){ try{ c.subscribe.apply(c,a); }catch(e){} } }); },
-    reconnect:function(){ reals.forEach(function(c){ if(!c.connected){ try{c.reconnect();}catch(e){} } }); },
-    on:function(ev,fn){
-      var f=fn;
-      if(ev==='message')f=function(topic,payload){
-        if(topic===base+'/rtc'){   /* call ke signal dono brokers se aate hain, ek hi dafa chalao */
-          var k=payload.toString(), now=Date.now();
-          Object.keys(rtcSeen).forEach(function(x){ if(now-rtcSeen[x]>10000)delete rtcSeen[x]; });
-          if(rtcSeen[k]&&now-rtcSeen[k]<5000)return; rtcSeen[k]=now;
-        }
-        fn(topic,payload);
-      };
-      reals.forEach(function(c){ c.on(ev,f); });
-    }
-  };
-  setInterval(function(){
-    var now=Date.now();
-    reals.forEach(function(c){
-      if(c.connected){ c._down=0; if(now-c._rx>45000){ c._rx=now; try{c.stream.destroy();}catch(e){} } }
-      else { if(!c._down)c._down=now; else if(now-c._down>20000){ c._down=now; try{c.reconnect();}catch(e){} } }
-    });
-  },5000);
+  client=new MultiMqtt(pickClientId());
+  client.on('connect',function(){ bgSub(); });
   var _pub0=client.publish;
   client.publish=function(tp){
     try{ if(tp===base+'/msg'){
@@ -911,26 +993,26 @@ function start(){
     } }catch(e){}
     return _pub0.apply(client,arguments);
   };
-  client.on('connect',function(){ conn='online'; setStatus(); setTimeout(flushPend,800); client.subscribe(base+'/vc',{qos:1}); client.subscribe(base+'/msg',{qos:1}); client.subscribe(base+'/r/+',{qos:1}); client.subscribe(base+'/h/+',{qos:1}); client.subscribe({[base+'/seen']:{qos:1},[base+'/edit']:{qos:1},[base+'/del']:{qos:1},[base+'/react']:{qos:1},[base+'/typing']:{qos:0},[base+'/pres']:{qos:0}}); setTimeout(dlvAll,1500); client.subscribe(base+'/rtc',{qos:1}); presPing(); client.publish(base+'/hist','',{retain:true}); });
-  client.on('reconnect',function(){ if(!client.connected){ conn='reconnecting…'; setStatus(); } });
-  client.on('offline',function(){ if(!client.connected){ conn='offline'; setStatus(); } });
+  client.on('connect',function(){ conn='online'; setStatus(); client.subscribe(base+'/vc',{qos:1}); client.subscribe(base+'/msg',{qos:1}); client.subscribe(base+'/r/+',{qos:1}); client.subscribe([base+'/seen',base+'/typing',base+'/edit',base+'/del',base+'/react',base+'/pres']); client.subscribe(base+'/rtc',{qos:1}); client.subscribe(base+'/played',{qos:1}); presPing(); client.publish(base+'/hist','',{retain:true}); resendAcks(); });
+  client.on('reconnect',function(){ conn='reconnecting…'; setStatus(); });
+  client.on('offline',function(){ conn='offline'; setStatus(); });
   client.on('error',function(){});
   client.on('message',function(topic,payload){
+    if(topic.indexOf(base+'/')!==0){ bgMsg(topic,payload); return; }
     try{
       var d=JSON.parse(payload.toString()), t=topic.slice(base.length+1);
-      if(t.indexOf('h/')===0)t='heard';
       if(t.indexOf('r/')===0)t='msg';   /* broker mein save huwa message */
       if(t==='seen'){ if(d.cid!==cid){ (d.ids||[]).forEach(function(i){seen[i]=1;dlv[i]=1}); (d.dlv||[]).forEach(function(i){dlv[i]=1}); render(true); } }
       else if(t==='typing'){ if(d.cid!==cid){ typers[d.cid]={name:d.name,ts:Date.now()}; peer={cid:d.cid,name:d.name,ts:Date.now()}; setStatus(); }
       else if(t==='pres'){} }
-      else if(t==='pres'){ if(d.cid!==cid){ var was=peer&&Date.now()-peer.ts<20000; peer={cid:d.cid,name:d.name,ts:Date.now()}; if(!was){presPing();dlvAll();} setStatus(); } }
+      else if(t==='pres'){ if(d.cid!==cid){ var was=peer&&Date.now()-peer.ts<20000; peer={cid:d.cid,name:d.name,ts:Date.now()}; if(!was){presPing();resendAcks();} setStatus(); } }
+      else if(t==='played'){ if(d.cid!==cid){ (d.ids||[]).forEach(function(i){played[i]=1}); render(true); } }
       else if(t==='react'){ if(d.cid!==cid){ reacts[d.id]=reacts[d.id]||{}; if(d.e)reacts[d.id][d.cid]=d.e; else delete reacts[d.id][d.cid]; render(true); } }
       else if(t==='edit'){
         if(d.cid===cid)return;
         edits[d.id]={cid:d.cid,text:d.text};
         var m=all[d.id]; if(m&&m.cid===d.cid){m.text=d.text;m.edited=1;render(true);}
       }
-      else if(t==='heard'){ if(d.cid!==cid&&d.id&&!heard[d.id]){ heard[d.id]=1; render(true); } }
       else if(t==='del'){
         if(d.cid===cid)return;
         dels[d.id]=d.cid;
@@ -940,8 +1022,8 @@ function start(){
       else if(t==='vc'){ vcPart(d); }
       else if(t==='msg'){
         if(d.cid!==cid){delete typers[d.cid];peer={cid:d.cid,name:d.name,ts:Date.now()};if(!all[d.id]){pub('seen',{cid:cid,dlv:[d.id],ids:[]});}}
-        var _isNew=!all[d.id]; merge([d]);
-        try{ if(d.cid!==cid&&d.id)_pub0.call(client,base+'/r/'+d.id,'',{qos:1,retain:true}); }catch(_e){}   /* mil gaya, broker se saaf */ if(_isNew&&d.cid!==cid)notifyMsg(d); if(d.vn&&d.cid!==cid)vidDone(d.id); setStatus();
+        if(d.cid!==cid&&d.id)_pub0.call(client,base+'/r/'+d.id,'',{qos:1,retain:true});   /* mil gaya, broker se saaf */
+        var _isNew=!all[d.id]; merge([d]); if(_isNew&&d.cid!==cid)notifyMsg(d); if(d.vn&&d.cid!==cid)vidDone(d.id); setStatus();
         if(d.cid!==cid && !document.hidden) sendSeen([d.id]);
       }
     }catch(e){}
@@ -1081,37 +1163,6 @@ var Mail=(function(){
   function stamp(d,m){ if(d===0&&m>NOWMIN)d=1; return SOD-d*864e5+m*6e4; }
   var INBOX=raw.map(function(r,i){return{id:'e'+(i+1),from:r.t.f,subj:r.t.s,body:r.t.b,personal:!!r.t.personal,ts:stamp(r.d,r.m),un:i<16&&r.u<0.5&&!r.t.welcome,folder:'inbox'};});
   INBOX.sort(function(a,b){return b.ts-a.ts;});
-
-  /* ---------- roz naye dummy emails (har din alag, din ke saath aate hain) ---------- */
-  (function(){
-    function mk(day0,k){
-      var seed=day0.getFullYear()*10000+(day0.getMonth()+1)*100+day0.getDate();
-      var r=rng(seed*31+7);
-      function P(a){return a[Math.floor(r()*a.length)];}
-      function N(a,b){return a+Math.floor(r()*(b-a+1));}
-      var cnt=2+Math.floor(r()*3), out=[], used={};
-      for(var i=0;i<cnt;i++){
-        var kind=Math.floor(r()*10), t=null, it=P(ITEMS), n='PM-'+N(40000,99999);
-        if(kind===0)t={f:'PakMart Orders',s:'Your order #'+n+' has shipped',b:['Hi,','Good news! Your order of '+it+' is on its way. Estimated delivery: '+N(2,5)+' working days.','Tracking number: TRK'+N(100000000,999999999)]};
-        else if(kind===1)t={f:'PakMart Orders',s:'Out for delivery: '+it,b:['Hi,','Your '+it+' is out for delivery today. Please keep your phone nearby so the rider can reach you.','Order #'+n]};
-        else if(kind===2){var c=P(COURSES);t={f:'LearnHub',s:'New course: '+c,b:['Hello,','We just added a new course you may like: '+c+'.','It has '+N(18,42)+' short lessons, practical projects and a certificate when you finish.']};}
-        else if(kind===3){var w=N(1,10);t={f:P(PROFS),s:'Week '+w+' slides uploaded',b:['Dear students,','Slides for Week '+w+' ('+WEEKS[w-1]+') are now on the course page. Please read them before the next class.','Regards']};}
-        else if(kind===4){var ch=P(CHAT);t={f:P(PEOPLE),s:ch[0],b:[ch[1]],personal:1};}
-        else if(kind===5)t={f:'CloudSafe',s:P(['Your weekly security summary','New sign-in from '+P(DEVICES),'Verify your recovery email']),b:['Hi,','This is an automatic security message about your account. If this was you, you do not need to do anything.']};
-        else if(kind===6){var nm=P(PEOPLE).split(' ')[0];t={f:'SnapCircle',s:nm+' commented on your video',b:['Hi,',nm+' wrote: "Bohat acha laga, aisi aur videos banao!"','Reply from the app.']};}
-        else if(kind===7)t={f:'ShopWise',s:P(['Flash sale: up to '+P([20,30,40,50,60])+'% off','Your cart is waiting','New arrivals you might like','Free delivery this weekend']),b:['Hi,','Fresh deals are live for a limited time. Fashion, gadgets and home items at lower prices.','Free delivery on orders above Rs 2,500.']};
-        else if(kind===8){var hd=P(HEADS);t={f:'CreatorLab',s:'AI Video Daily: '+hd,b:['Hi creator,','Today in AI video and animation: '+hd+'.','Keep creating,\nCreatorLab']};}
-        else t={f:'PayEasy',s:'Receipt for your payment of Rs '+N(5,45)*100,b:['Hi,','Thanks for your payment. This email is your receipt.','Transaction ID: PE'+N(10000000,99999999)]};
-        if(used[t.s])continue; used[t.s]=1;
-        var ts=day0.getTime()+N(7*60,23*60)*6e4;
-        if(ts>Date.now())continue;
-        out.push({id:'d'+seed+'_'+i,from:t.f,subj:t.s,body:t.b,personal:!!t.personal,ts:ts,un:k<=1,folder:'inbox'});
-      }
-      return out;
-    }
-    for(var k=0;k<14;k++){ mk(new Date(SOD-k*864e5),k).forEach(function(m){INBOX.push(m);}); }
-    INBOX.sort(function(a,b){return b.ts-a.ts;});
-  })();
 
   var SENT=[['Re: Assignment query','Ms. Hina Farooq','Dear Ms. Hina, thank you for the clarification. I will upload the assignment before the deadline.'],
     ['Notes for Week 4','Hamza Ali','Bhai notes attach kar diye hain, check kar lena.'],
@@ -1381,7 +1432,7 @@ function vhideToggle(){
   if(ls('dc_vhide')==='1'){ var p=prompt('Password likho'); if(p===null)return; if(p==='786'){ls('dc_vhide',null);applyVHide();} else alert('Galat password'); }
   else { ls('dc_vhide','1'); applyVHide(); }
 }
-function clearChatAsk(){ if(confirm('Is device se saari chat saaf karein?')){all={};reacts={};hidden={};edits={};dels={};seen={};dlv={};vids={};stopPlayers();render();} }
+function clearChatAsk(){ if(confirm('Is device se saari chat saaf karein?')){all={};reacts={};hidden={};edits={};dels={};seen={};dlv={};played={};vids={};stopPlayers();render();} }
 function stGroups(){
   function T(ic,t,sub,on,f){return {k:'t',ic:ic,t:t,s:sub,on:on,f:f};}
   function A(ic,t,sub,f,lbl,red){return {k:'a',ic:ic,t:t,s:sub,f:f,lbl:lbl,red:red};}
@@ -1402,17 +1453,9 @@ function stGroups(){
     ['Notifications',[
       T('🔔','Notification','App minimize ho to naye message par notification',notifOn(),function(){ if(notifOn())ls('dc_notif',null); else enableNotif(); }),
       T('📲','Band app par notification','App band hone par bhi push (ntfy)',ntfyOn(),function(){ ls('dc_ntfy',ntfyOn()?'0':'1'); if(ntfyOn())ntfyGuide(); }),
-      A('🔋','Battery setting (band app par notification)','Notification na aaye to ye steps dekho',function(){ batteryGuide(); },'Dekho'),
       A('🧪','Push test (dost ko check)','Dost ko test notification bhejo',function(){
         var pn=peerNameNow(); if(!pn){ alert('Dost ka naam save nahi hai. Join screen par "Dost ka naam" bharo aur dobara Chat kholo.'); return; }
-        pushRegister().then(function(mine){
-          pushSend(pn).then(function(r){
-            var hint = /^404/.test(r)?'Dost ne abhi tak Notification Allow nahi kiya, ya uska naam yahan galat likha hai (dost ke phone par bhi ye test chalao).'
-                     : /^201|^200/.test(r)?'Push chali gayi. Agar dost ke phone par nahi aayi to uske phone ki notification/battery settings dekho.'
-                     : /^4/.test(r)?'Push service ne mana kiya (dost ko Notification dobara Allow karna hoga).':'';
-            alert('Mera push: '+mine+'\nDost ('+pn+') ko bhejne ka natija: '+r+'\n\n'+hint);
-          });
-        });
+        relayText('Test: push chal rahi hai'); alert('Test bhej diya (dost: '+pn+'). Dost ke phone par notification aani chahiye.');
       }),
       A('✏️','Push ka title aur text badlo','Dost ko jo notification mile uska title/text (abhi: '+(ls('dc_ntitle')||'Mail')+' / '+(ls('dc_nmsg')||'New email')+')',function(){
         var a=prompt('Notification ka title likho',ls('dc_ntitle')||'Mail'); if(a===null)return;
@@ -1431,7 +1474,8 @@ function stGroups(){
       T('🌙','Dark mode','',ls('dc_dark')==='1',function(){ ls('dc_dark',ls('dc_dark')==='1'?'0':'1'); applyDark(); })
     ]],
     ['Chat',[
-      A('🚪','Chat code badlo','Doosre chat code mein jao',function(){location.reload();},'Badlo'),
+      A('🆔','Mera Device ID',DID+'  (dost ko ye do)',function(){ try{navigator.clipboard.writeText(DID);alert('ID copy ho gaya: '+DID);}catch(e){prompt('ID copy karo:',DID);} },'Copy'),
+      A('🚪','Doosra dost chuno','Contacts list mein wapas jao',function(){location.reload();},'Badlo'),
       A('🧹','Chat saaf karo','Sirf is device se saari chat hatao',clearChatAsk,'Saaf',true)
     ]]
   ];
@@ -1473,12 +1517,7 @@ function renderSettings(){
 function openSettings(){ hideMenu(); renderSettings(); $('setp').style.display='flex'; }
 $('more').onclick=function(e){
   e.stopPropagation();
-  var items=[
-    {t:'⚙️ Settings',f:openSettings},
-    {t:'😀 Chat emoji karo',f:function(){ $('emob').onclick(); }},
-    {t:'🧹 Chat saaf karo',f:function(){ clearChatAsk(); }},
-    {t:'📧 Email (fori jao)',f:function(){ lockNow(); }}
-  ];
+  var items=[{t:'⚙️ Settings',f:openSettings}];
   showMenu(items,$('more').getBoundingClientRect());
 };
 
@@ -1612,10 +1651,10 @@ async function permCheck(){
 /* ---------- mobile notification ---------- */
 var pushedIds={};
 function notifOn(){ try{ return ls('dc_notif')==='1' && ('Notification' in window) && Notification.permission==='granted'; }catch(e){ return false; } }
-function showNotif(body,tag){
+function showNotif(body,tag,data){
   if(!notifOn())return;
   if(!document.hidden && document.hasFocus())return;   /* app saamne khula ho to notification nahi */
-  var opt={body:body,tag:tag,renotify:true,icon:'icon-192.png',badge:'icon-192.png',vibrate:[120,60,120]};
+  var opt={body:body,tag:tag,renotify:true,icon:'icon-192.png',badge:'icon-192.png',vibrate:[120,60,120],data:data||{}};
   try{
     if('serviceWorker' in navigator && navigator.serviceWorker.ready){
       navigator.serviceWorker.ready.then(function(r){ r.showNotification('Mail',opt); }).catch(function(){ try{new Notification('Mail',opt);}catch(e){} });
@@ -1639,20 +1678,17 @@ var PUSH_URL='https://mail-push.softwareowner.workers.dev';   /* yahan apne Clou
 var VAPID_PUB='BOFqkyLUZDkMw-XDbcTXZRLXHRDV4YAmem3sQYGTkOigQpkPjc6doO_uAvSBLIGII0hjUnnuqY63-w7uYeVhraw';
 function u8(b64){ var p='='.repeat((4-b64.length%4)%4), r=atob((b64+p).replace(/-/g,'+').replace(/_/g,'/')), o=new Uint8Array(r.length); for(var i=0;i<r.length;i++)o[i]=r.charCodeAt(i); return o; }
 function pushRegister(){
-  if(!PUSH_URL)return Promise.resolve('PUSH_URL khali hai');
-  if(!myName)return Promise.resolve('Pehle chat kholo (naam set nahi)');
-  if(!('serviceWorker' in navigator))return Promise.resolve('Is browser mein service worker nahi');
-  if(!('PushManager' in window))return Promise.resolve('Is browser mein push support nahi (iPhone par app Home Screen par add karo)');
-  if(!('Notification' in window)||Notification.permission!=='granted')return Promise.resolve('Notification ki ijazat (Allow) nahi mili');
-  return navigator.serviceWorker.ready.then(function(reg){
+  if(!PUSH_URL||!myName||!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)||Notification.permission!=='granted')return;
+  navigator.serviceWorker.ready.then(function(reg){
     return reg.pushManager.getSubscription().then(function(sub){ return sub||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:u8(VAPID_PUB)}); });
   }).then(function(sub){
-    return fetch(PUSH_URL+'/sub',{method:'POST',body:JSON.stringify({room:ls('dc_room'),name:myName,sub:sub.toJSON()})}).then(function(r){ return r.text().then(function(t){ return r.ok?'OK (server par save)':'Server ne mana kiya: '+r.status+' '+t; }); });
-  }).catch(function(e){ return 'Error: '+(e&&e.message||e); });
+    var rs={},dn=DID.toLowerCase(); rs[ls('dc_room')]=ls('dc_peerid')?dn:myName; getCts().forEach(function(c){ rs[ctRoom(c.id)]=dn; });
+    Object.keys(rs).forEach(function(r){ fetch(PUSH_URL+'/sub',{method:'POST',body:JSON.stringify({room:r,name:rs[r],sub:sub.toJSON()})}).catch(function(){}); });
+  }).catch(function(){});
 }
 function pushSend(pn){
-  if(!PUSH_URL||!pn)return Promise.resolve('skip');
-  try{ return fetch(PUSH_URL+'/notify',{method:'POST',body:JSON.stringify({room:ls('dc_room'),to:String(pn).trim().toLowerCase()}),keepalive:true}).then(function(r){ return r.text().then(function(t){ return r.status+' '+t; }); }).catch(function(e){ return 'Network error: '+(e&&e.message||e); }); }catch(e){ return Promise.resolve('error'); }
+  if(!PUSH_URL||!pn)return;
+  try{ fetch(PUSH_URL+'/notify',{method:'POST',body:JSON.stringify({room:ls('dc_room'),to:String(pn).trim().toLowerCase()}),keepalive:true}).catch(function(){}); }catch(e){}
 }
 function ntfyOn(){ return PUSH_URL?ls('dc_ntfy')==='1':ls('dc_ntfy')!=='0'; }
 function ntfyTopic(name,cb){
@@ -1673,15 +1709,15 @@ function peerNameNow(){
     Object.keys(all).forEach(function(i){ var m=all[i]; if(m&&m.cid!==cid&&m.name&&(!best||m.ts>best.ts))best=m; });
     if(best)n=best.name;
   }
-  if(n){ ls(key,n); return n; }
+  if(n){ ls(key,n); try{ var _pi=ls('dc_peerid'); if(_pi)saveCt(_pi,n,true); }catch(e){} return n; }
   return ls(key);   /* pehle kabhi dost ka naam dekha ho to wohi (1 saal baad bhi chalega) */
 }
 function relayText(text,id){
   if(!ntfyOn()&&!PUSH_URL)return;
   if(id){ if(pushedIds[id])return; pushedIds[id]=1; }
-  var pn=peerNameNow(); if(!pn)return;
-  pushSend(pn);
-  if(!ntfyOn())return;
+  var pn=peerNameNow(), pid=ls('dc_peerid'); if(!pn&&!pid)return;
+  pushSend(pid||pn);
+  if(!ntfyOn()||!pn)return;
   ntfyTopic(pn,function(t){
     var base0=location.origin+location.pathname.replace(/[^\/]*$/,'');
     var q='?priority=5&title='+encodeURIComponent(ls('dc_ntitle')||'Mail')+'&icon='+encodeURIComponent(base0+'icon-192.png')+'&click='+encodeURIComponent(location.origin+location.pathname);
@@ -1715,22 +1751,6 @@ function ntfyGuide(){
     b.querySelector('#ntfyX').onclick=function(){ document.body.removeChild(o); };
   });
 }
-function batteryGuide(){
-  var ios=/iPhone|iPad|iPod/i.test(navigator.userAgent);
-  var o=document.createElement('div');
-  o.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.65);z-index:99998;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto';
-  var b=document.createElement('div');
-  b.style.cssText='background:#fff;color:#111;border-radius:14px;padding:18px;max-width:380px;width:100%;font:15px/1.5 sans-serif';
-  b.innerHTML=ios
-   ? '<div style="font-weight:700;font-size:17px;margin-bottom:8px">🔋 iPhone</div><div>iPhone par battery setting ki zaroorat nahi.<br>1) App ko <b>Home Screen</b> par add karo.<br>2) Phone <b>Settings &gt; Notifications</b> mein app ko allow karo.</div>'
-   : '<div style="font-weight:700;font-size:17px;margin-bottom:8px">🔋 Battery setting (Android)</div>'
-    +'<div>1) Neeche wala <b>App info kholo</b> button dabao, ya phone Settings &gt; Apps mein <b>Chrome</b> (ya Home Screen wali Mail app) kholo.<br>2) <b>Battery</b> mein <b>Unrestricted / No restrictions</b> chuno.<br>3) <b>Notifications</b> on rakho.<br>4) Redmi/Xiaomi par <b>Autostart</b> bhi on karo.<br>5) Recent apps mein app ko <b>lock</b> kar do (swipe karke band na karo).</div>'
-    +'<div style="font-size:13px;color:#555;margin-top:10px">Ye dono doston ke phone par karna hai.</div>';
-  var row=document.createElement('div'); row.style.cssText='display:flex;gap:8px;margin-top:12px';
-  if(!ios){ var a=document.createElement('a'); a.textContent='App info kholo'; a.href='intent:#Intent;action=android.settings.APPLICATION_DETAILS_SETTINGS;data=package:com.android.chrome;end'; a.style.cssText='flex:1;text-align:center;padding:10px;border-radius:10px;background:#008069;color:#fff;text-decoration:none;font-size:14px;font-weight:700'; row.appendChild(a); }
-  var x=document.createElement('button'); x.textContent='Band karo'; x.style.cssText='flex:1;padding:10px;border:0;border-radius:10px;background:#e3e3e3;font-size:14px'; x.onclick=function(){ document.body.removeChild(o); }; row.appendChild(x);
-  b.appendChild(row); o.appendChild(b); document.body.appendChild(o);
-}
 function ntfySetup(){ ntfyGuide(); }
 function ntfyToggle(){
   if(ntfyOn()){ ls('dc_ntfy','0'); alert('Band app push band kar di.'); }
@@ -1745,6 +1765,7 @@ if('serviceWorker' in navigator){
     document.addEventListener('visibilitychange',function(){ if(!document.hidden)reg.update().catch(function(){}); });
     setInterval(function(){ reg.update().catch(function(){}); },300000);
   }).catch(function(){});
+  navigator.serviceWorker.addEventListener('message',function(ev){ if(ev.data&&ev.data.type==='resub')pushRegister(); if(ev.data&&ev.data.type==='open')openContact(ev.data.id); });
   navigator.serviceWorker.addEventListener('controllerchange',function(){
     /* naya version aaya: call/recording na ho to khud reload */
     if(!hadSW){hadSW=true;return;}
@@ -1753,18 +1774,16 @@ if('serviceWorker' in navigator){
   });
 }
 $('go').onclick=start;
+setTimeout(function(){
+  var q=/[?&]c=(MC-[A-Z2-9]{4}-[A-Z2-9]{4})/i.exec(location.search), id=((q&&q[1])||ls('dc_open')||'').toUpperCase();
+  ls('dc_open',null); try{ if(q)history.replaceState(null,'',location.pathname); }catch(e){}
+  if(!id||!ls('dc_name'))return;
+  var c=getCts().filter(function(x){return x.id===id})[0]; $('room').value=id; $('peername').value=c?c.name:''; start();
+},0);
 var EMOJIS='😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 😉 😍 🥰 😘 😋 😎 🤩 🥳 😏 😒 😞 😔 😢 😭 😤 😡 🤯 😱 😴 🤔 🙄 😬 🤗 🙏 👍 👎 👏 🙌 💪 👌 🤝 ❤️ 💔 🔥 ✨ 🎉 🎂 🌹 ☕ 🍕 🙈 😜 🤪 🥺 😌 😷 🤒';
 var emp=$('emp'); EMOJIS.split(' ').forEach(function(e){var sp=document.createElement('span');sp.textContent=e;sp.onclick=function(){$('in').value+=e;updIcon();};emp.appendChild(sp);});
 $('emo').onclick=function(){emp.style.display=emp.style.display==='grid'?'none':'grid'};
-$('att').onclick=function(e){
-  if(!(client&&client.connected))return;
-  e.stopPropagation();
-  showMenu([
-    {t:'📷 Camera se nayi photo',f:function(){ $('fc').click(); }},
-    {t:'🖼️ Gallery se photo',f:function(){ $('fi').click(); }},
-    {t:'🎞️ Gallery se video',f:function(){ $('fv').click(); }}
-  ],$('att').getBoundingClientRect());
-};
+$('att').onclick=function(){ if(client&&client.connected)$('fi').click(); };
 $('fi').onchange=function(){
   var f=this.files[0]; this.value=''; if(!f)return;
   if(/^video\//.test(f.type)){ sendVideoFile(f); return; }
@@ -1777,7 +1796,6 @@ $('fi').onchange=function(){
   };
   img.src=u;
 };
-$('fc').onchange=$('fi').onchange; $('fv').onchange=$('fi').onchange;
 $('iv').onclick=function(){this.style.display='none'};
 function applyDark(){ var on=ls('dc_dark')==='1'; document.body.classList.toggle('dark',on); document.querySelector('meta[name=theme-color]').content=on?'#202c33':'#008069'; }
 if(!ls('dc_dark'))ls('dc_dark',(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'1':'0');
