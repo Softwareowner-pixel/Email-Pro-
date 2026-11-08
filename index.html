@@ -531,6 +531,19 @@ function disLbl(){ var h=disH(); return h?(h>=168?'7 din':'24 ghante'):'Off'; }
 function disCycle(){ var h=disH(); ls('dc_dis',h?(h<168?'168':null):'24'); try{stRefresh();}catch(e){} disSweep(); }
 function disSweep(){ var h=disH(); if(!h||!window._dcOn)return; var lim=Date.now()-h*3600000, ch=0; Object.keys(all).forEach(function(i){ if(all[i]&&all[i].ts<lim){ delete all[i]; ch=1; } }); if(ch){ try{render(true);}catch(e){} try{saveHist();}catch(e){} } }
 setInterval(disSweep,60000); setTimeout(disSweep,4000);
+function accAdd(){
+  var o=document.createElement('div'); o.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+  var b=document.createElement('div'); b.style.cssText='background:#fff;color:#202124;width:100%;max-width:360px;border-radius:24px;padding:28px 24px 20px;font:16px/1.4 Roboto,system-ui,sans-serif';
+  b.innerHTML='<div style="font-size:24px;margin-bottom:6px">Sign in</div><div style="font-size:14px;margin-bottom:22px">Use your Google Account</div><input id="acc-in" type="password" placeholder="Email or phone" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:100%;padding:14px;border:1px solid #747775;border-radius:6px;font:inherit;box-sizing:border-box;outline:0;background:#fff;color:#202124"><div id="acc-err" style="color:#d93025;font-size:13px;margin-top:8px;min-height:18px"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px"><span id="acc-x" style="color:#1a73e8;font-weight:500;cursor:pointer;padding:8px">Cancel</span><span id="acc-ok" style="background:#1a73e8;color:#fff;padding:10px 24px;border-radius:20px;font-weight:500;cursor:pointer">Next</span></div>';
+  o.appendChild(b); document.body.appendChild(o);
+  var inp=b.querySelector('#acc-in'), err=b.querySelector('#acc-err');
+  function close(){ if(o.parentNode)o.parentNode.removeChild(o); }
+  function bad(){ err.textContent="Couldn't find your Google Account"; }
+  function go(){ var v=normCode(inp.value); if(v.length<3||!hasCode()){ bad(); return; } mcCheck(v,function(ok){ if(ok){ close(); unlockApp(); } else bad(); }); }
+  b.querySelector('#acc-ok').onclick=go; b.querySelector('#acc-x').onclick=close;
+  inp.onkeydown=function(e){ if(e.key==='Enter')go(); };
+  setTimeout(function(){ try{inp.focus();}catch(e){} },100);
+}
 /* ---------- doosre contacts ke messages bhi live (background) ---------- */
 var bgq={};
 function bgSub(){
@@ -1304,12 +1317,18 @@ var Mail=(function(){
   function back(){ if(pushed>0)history.back(); else closeTop(); }
 
   /* ---------- drawer ---------- */
+  function accHtml(){
+    var A=[['Ahmed Raza','ahmed.raza.pk@gmail.com'],['Office Mail','office.mail.pk@gmail.com'],['Sana Malik','sana.malik22@gmail.com']];
+    return '<div class="gm-hr"></div><div style="padding:8px 18px 4px;font-size:12px;letter-spacing:.5px;opacity:.7">ACCOUNTS</div>'+A.map(function(a,i){
+      return '<div class="gm-di" style="gap:12px;cursor:default"><div class="gm-av" style="background:'+col(a[0])+';margin:0;flex:none">'+esc(ini(a[0]))+'</div><span style="flex:1;min-width:0;line-height:1.25"><span style="display:block;font-size:14px">'+esc(a[0])+(i===0?' ✓':'')+'</span><span style="display:block;font-size:12px;opacity:.7;overflow:hidden;text-overflow:ellipsis">'+esc(a[1])+'</span></span></div>';
+    }).join('')+'<button class="gm-di" data-add="1"><span style="font-size:22px;width:22px;text-align:center">＋</span><span>Add new account</span></button>';
+  }
   function drawer(on){
     if(on){
       var f=[['inbox','inbox','Inbox',unreadCount()],['starred','starb','Starred',0],['sent','send','Sent',0],['drafts','draft','Drafts',S.drafts.length],['spam','warn','Spam',0],['trash','trash','Trash',0]];
       $('gm-panel').innerHTML='<div class="gm-brand">Mail</div>'+f.map(function(x,i){
         return (i===4?'<div class="gm-hr"></div>':'')+'<button class="gm-di'+(cur===x[0]&&!q?' on':'')+'" data-f="'+x[0]+'">'+svg(x[1],22)+'<span>'+x[2]+'</span>'+(x[3]?'<b>'+x[3]+'</b>':'')+'</button>';
-      }).join('');
+      }).join('')+accHtml();
     }
     $('gm-dr').classList.toggle('open',on);
   }
@@ -1369,7 +1388,7 @@ var Mail=(function(){
     $('gm-me').textContent=ini(ls('dc_name')||'M');
     $('gm-menu').onclick=function(){ drawer(true); };
     $('gm-scrim').onclick=function(){ drawer(false); };
-    $('gm-panel').onclick=function(e){ var b=e.target.closest('[data-f]'); if(!b)return; cur=b.getAttribute('data-f'); q=''; $('gm-q').value=''; drawer(false); renderList(); };
+    $('gm-panel').onclick=function(e){ if(e.target.closest('[data-add]')){ drawer(false); accAdd(); return; } var b=e.target.closest('[data-f]'); if(!b)return; cur=b.getAttribute('data-f'); q=''; $('gm-q').value=''; drawer(false); renderList(); };
     $('gm-rows').onclick=function(e){
       var s=e.target.closest('[data-star]');
       if(s){ var id=s.getAttribute('data-star'); toggleStar(id); var on=!!S.star[id]; s.classList.toggle('on',on); s.innerHTML=svg(on?'star':'starb',22); if(cur==='starred')renderList(); return; }
