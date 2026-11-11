@@ -91,6 +91,15 @@ body.dark .pill textarea{color:#e9edef}
 .m.first.me::before{right:-8px;clip-path:polygon(0 0,100% 0,0 100%)}
 .ds{align-self:center;background:#fff;color:#54656f;font-size:12.5px;padding:5px 12px;border-radius:8px;margin:8px 0 4px;box-shadow:0 1px .5px rgba(11,20,26,.13)}
 .enc{align-self:center;max-width:88%;text-align:center;background:#ffeecd;color:#54656f;font-size:12.5px;padding:6px 10px;border-radius:8px;margin:4px 0 8px}
+.tyb{align-self:flex-start;background:#fff;border-radius:8px;border-top-left-radius:0;padding:10px 14px;margin-top:6px;display:flex;align-items:center;gap:5px;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.tyb i{display:block;width:7px;height:7px;border-radius:50%;background:#8696a0;animation:tyd 1.2s infinite ease-in-out}
+.tyb i:nth-child(2){animation-delay:.18s}
+.tyb i:nth-child(3){animation-delay:.36s}
+.tyb.rc{padding:8px 14px;font-size:15px}
+.tyb.rc b{font-weight:400;animation:bl 1s infinite}
+@keyframes tyd{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-5px);opacity:1}}
+body.dark .tyb{background:#202c33;box-shadow:none}
+body.dark .tyb i{background:#8696a0}
 .rx{display:block;clear:both;width:fit-content;background:#fff;border-radius:12px;padding:1px 6px;font-size:14px;margin:2px 0 -12px;box-shadow:0 1px 2px rgba(11,20,26,.25)}
 .m.hasrx{margin-bottom:12px}
 .mi{display:block;max-width:100%;width:240px;border-radius:6px;margin:1px 0 3px;cursor:pointer}
@@ -455,6 +464,7 @@ body.dark #gm-setup button{color:#062e6f}
   <video id="localV" autoplay playsinline muted></video>
   <div id="callstate"></div>
   <div id="callbtns">
+    <button id="cv-spk" aria-label="Speaker">🔊</button>
     <button id="cv-mic">🎙️</button>
     <button id="cv-cam">🎥</button>
     <button id="cv-end">📞</button>
@@ -511,7 +521,7 @@ function flushIn(){ lastIn=null; growIn(); }
 document.addEventListener('visibilitychange',function(){ if(document.hidden)flushIn(); });
 window.addEventListener('pagehide',flushIn);
 function ctSet(f){ var a=getCts(); a=f(a)||a; ls('dc_cts',JSON.stringify(a)); drawJoin(); }
-function ctPhoto(id){ var f=document.createElement('input'); f.type='file'; f.accept='image/*'; f.onchange=function(){ var fl=f.files&&f.files[0]; if(!fl)return; var r=new FileReader(); r.onload=function(){ var im=new Image(); im.onload=function(){ var cv=document.createElement('canvas'); cv.width=cv.height=96; var z=Math.min(im.width,im.height); cv.getContext('2d').drawImage(im,(im.width-z)/2,(im.height-z)/2,z,z,0,0,96,96); ls('dc_pf|'+id,cv.toDataURL('image/jpeg',0.7)); drawJoin(); }; im.src=r.result; }; r.readAsDataURL(fl); }; f.click(); }
+function ctPhoto(id){ var f=document.createElement('input'); f.type='file'; f.accept='image/*'; try{pickMark();}catch(e){} f.onchange=function(){ var fl=f.files&&f.files[0]; if(!fl)return; var r=new FileReader(); r.onload=function(){ var im=new Image(); im.onload=function(){ var cv=document.createElement('canvas'); cv.width=cv.height=96; var z=Math.min(im.width,im.height); cv.getContext('2d').drawImage(im,(im.width-z)/2,(im.height-z)/2,z,z,0,0,96,96); ls('dc_pf|'+id,cv.toDataURL('image/jpeg',0.7)); drawJoin(); }; im.src=r.result; }; r.readAsDataURL(fl); }; f.click(); }
 function ctMenu(c){
   var o=document.createElement('div'); o.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:flex-end;justify-content:center';
   var b=document.createElement('div'); b.style.cssText='background:#fff;color:#111;width:100%;max-width:420px;border-radius:16px 16px 0 0;padding:8px 0 max(12px,env(safe-area-inset-bottom));font:16px sans-serif';
@@ -678,8 +688,9 @@ $('sq').oninput=function(){
 function setStatus(){
   var now=Date.now(), names=[];
   Object.keys(typers).forEach(function(c){ if(now-typers[c].ts<3500)names.push(typers[c].name); else delete typers[c]; });
-  var st=$('st');
-  if(names.length){st.textContent=names.join(', ')+' typing…';st.className='ty';}
+  var st=$('st'), recNow=false;
+  Object.keys(typers).forEach(function(c){ if(now-typers[c].ts<3500&&typers[c].rec)recNow=true; });
+  if(names.length){st.textContent=recNow?(names.join(', ')+' recording audio…'):(names.join(', ')+' typing…');st.className='ty';}
   else{
     var tx=conn;
     if(conn==='online'||!conn){ tx=peer?((now-peer.ts<20000)?'online':'last seen '+hhmm(peer.ts)):''; }
@@ -687,6 +698,17 @@ function setStatus(){
   }
   $('ttl').textContent=(peer&&!maskOn)?peer.name:'Dost Chat'; $('avt').textContent=(peer&&!maskOn)?peer.name.charAt(0).toUpperCase():'💬';
   if(maskOn){st.textContent='';st.className='';}
+  tyBubble(!maskOn&&names.length>0,recNow);
+}
+function tyBubble(on,rc){
+  var box=$('msgs'); if(!box)return;
+  var b=$('tyb');
+  if(!on){ if(b&&b.parentNode)b.parentNode.removeChild(b); return; }
+  var near=box.scrollHeight-box.scrollTop-box.clientHeight<90;
+  if(!b){ b=document.createElement('div'); b.id='tyb'; }
+  var kind=rc?'rc':'tp';
+  if(b.getAttribute('data-k')!==kind){ b.setAttribute('data-k',kind); b.className='tyb'+(rc?' rc':''); b.innerHTML=rc?'<b>🎤</b><i></i><i></i><i></i>':'<i></i><i></i><i></i>'; }
+  if(b.parentNode!==box||box.lastChild!==b){ box.appendChild(b); if(near)box.scrollTop=box.scrollHeight; }
 }
 setInterval(setStatus,1000);
 
@@ -739,6 +761,7 @@ function render(keepScroll){
     box.appendChild(el); prev=v;
   });
   if(atBottom||!keepScroll)box.scrollTop=box.scrollHeight; else box.scrollTop=oldTop;
+  try{ setStatus(); }catch(e){}
 }
 function jumpTo(id){
   var el=$('m_'+id); if(!el)return;
@@ -814,6 +837,8 @@ function voiceEl(v){
 }
 function stopPlayers(){ Object.keys(players).forEach(function(k){try{players[k].a.pause()}catch(_){}}); players={}; }
 
+function recPing(){ try{ if(client&&client.connected)client.publish(base+'/typing',JSON.stringify({cid:cid,name:myName,rec:1}),{qos:0}); }catch(e){} }
+function recStopPing(){ try{ if(client&&client.connected)client.publish(base+'/typing',JSON.stringify({cid:cid,name:myName,stop:1}),{qos:0}); }catch(e){} }
 function startRec(){
   if(rec||!client)return;
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){alert(mediaErr({name:'NoMedia'},false));return;}
@@ -826,7 +851,7 @@ function startRec(){
     rec={mr:mr,chunks:[],t0:Date.now(),cancel:false,stream:stream,timer:null};
     mr.ondataavailable=function(e){ if(e.data&&e.data.size)rec.chunks.push(e.data); };
     mr.onstop=function(){
-      var r=rec; rec=null; clearInterval(r.timer);
+      var r=rec; rec=null; clearInterval(r.timer); recStopPing();
       r.stream.getTracks().forEach(function(t){t.stop()});
       $('rec').style.display='none'; $('ft').style.display='flex';
       var dur=Math.round((Date.now()-r.t0)/1000);
@@ -838,8 +863,10 @@ function startRec(){
     };
     mr.start();
     $('ft').style.display='none'; $('rec').style.display='flex'; $('rt').textContent='0:00';
+    recPing();
     rec.timer=setInterval(function(){
       var s=(Date.now()-rec.t0)/1000; $('rt').textContent=fmt(s);
+      if(Math.floor(s*4)%8===0)recPing();
       if(s>=60)stopRec(false);
     },250);
    }catch(err){ try{stream.getTracks().forEach(function(t){t.stop()})}catch(_){} rec=null; $('rec').style.display='none'; $('ft').style.display='flex'; alert('Voice record shuru nahi ho saki ('+((err&&err.name)||'error')+')'); }
@@ -1054,7 +1081,7 @@ function start(){
       var d=JSON.parse(payload.toString()), t=topic.slice(base.length+1);
       if(t.indexOf('r/')===0)t='msg';   /* broker mein save huwa message */
       if(t==='seen'){ if(d.cid!==cid){ (d.ids||[]).forEach(function(i){seen[i]=1;dlv[i]=1}); (d.dlv||[]).forEach(function(i){dlv[i]=1}); render(true); } }
-      else if(t==='typing'){ if(d.cid!==cid){ typers[d.cid]={name:d.name,ts:Date.now()}; peer={cid:d.cid,name:d.name,ts:Date.now()}; setStatus(); }
+      else if(t==='typing'){ if(d.cid!==cid){ if(d.stop){ delete typers[d.cid]; } else { typers[d.cid]={name:d.name,ts:Date.now(),rec:d.rec?1:0}; } peer={cid:d.cid,name:d.name,ts:Date.now()}; setStatus(); }
       else if(t==='pres'){} }
       else if(t==='pres'){ if(d.cid!==cid){ var was=peer&&Date.now()-peer.ts<20000; peer={cid:d.cid,name:d.name,ts:Date.now()}; if(!was){presPing();resendAcks();} setStatus(); } }
       else if(t==='played'){ if(d.cid!==cid){ (d.ids||[]).forEach(function(i){played[i]=1}); render(true); } }
@@ -1584,7 +1611,13 @@ var isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 /* chat ab delete nahi hoti, minimize par sirf emoji ban jati hai (agar secret code laga ho) */
 /* ---------- recent apps (3-line) mein kaali screen ---------- */
 var coverT=null, coverAt=0, coverEdge=false;
+/* photo/video chunne ke liye file picker khule to app lock na ho */
+var pickAt=0;
+function pickMark(){ pickAt=Date.now(); }
+function pickBusy(){ return Date.now()-pickAt<120000; }
+function pickDone(){ pickAt=0; }
 function coverOn(why){
+  if(pickBusy())return;
   if(!covEnabled()&&!idleHold)return;
   var was=$('cover').style.display==='block';
   if(why==='edge'){ if(!was)coverEdge=true; } else coverEdge=false;
@@ -1611,8 +1644,8 @@ $('cover').addEventListener('pointerdown',function(){ if(document.visibilityStat
 window.addEventListener('blur',coverOn);
 window.addEventListener('focus',function(){ if(document.visibilityState==='visible')coverOff(); });
 window.addEventListener('pageshow',function(){ if(document.visibilityState==='visible')coverOff(); });
-document.addEventListener('visibilitychange',function(){ if(document.hidden){coverOn();hideChat();lockNow();} else { coverOff(); if(!mailOpen())seenAll(); } });
-window.addEventListener('pagehide',function(){coverOn();hideChat();lockNow();});
+document.addEventListener('visibilitychange',function(){ if(pickBusy())return; if(document.hidden){coverOn();hideChat();lockNow();} else { coverOff(); if(!mailOpen())seenAll(); } });
+window.addEventListener('pagehide',function(){ if(pickBusy())return; coverOn();hideChat();lockNow();});
 /* ---------- connection kabhi na tootay (auto reconnect) ---------- */
 var hiddenAt=0;
 function dropSock(){ try{ client.stream.destroy(); }catch(e){ try{ client.reconnect(); }catch(_){} } }
@@ -1841,8 +1874,11 @@ setTimeout(function(){
 var EMOJIS='😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 😉 😍 🥰 😘 😋 😎 🤩 🥳 😏 😒 😞 😔 😢 😭 😤 😡 🤯 😱 😴 🤔 🙄 😬 🤗 🙏 👍 👎 👏 🙌 💪 👌 🤝 ❤️ 💔 🔥 ✨ 🎉 🎂 🌹 ☕ 🍕 🙈 😜 🤪 🥺 😌 😷 🤒';
 var emp=$('emp'); EMOJIS.split(' ').forEach(function(e){var sp=document.createElement('span');sp.textContent=e;sp.onclick=function(){$('in').value+=e;updIcon();};emp.appendChild(sp);});
 $('emo').onclick=function(){emp.style.display=emp.style.display==='grid'?'none':'grid'};
-$('att').onclick=function(){ if(client&&client.connected)$('fi').click(); };
+$('att').onclick=function(){ if(client&&client.connected){ pickMark(); $('fi').click(); } };
+$('fi').addEventListener('cancel',function(){ setTimeout(pickDone,500); });
+window.addEventListener('focus',function(){ if(pickAt)setTimeout(pickDone,1500); });
 $('fi').onchange=function(){
+  pickMark(); setTimeout(pickDone,4000);
   var f=this.files[0]; this.value=''; if(!f)return;
   if(/^video\//.test(f.type)){ sendVideoFile(f); return; }
   var img=new Image(),u=URL.createObjectURL(f);
@@ -1883,7 +1919,7 @@ function newPc(){
   };
   p.oniceconnectionstatechange=function(){
     var s=p.iceConnectionState;
-    if(s==='connected'||s==='completed'){ setCallState('Connected'); var rv=$('remoteV'); var pl=rv.play(); if(pl&&pl.catch)pl.catch(function(){}); }
+    if(s==='connected'||s==='completed'){ setCallState('Connected'); var rv=$('remoteV'); var pl=rv.play(); if(pl&&pl.catch)pl.catch(function(){}); spkApply(); }
     else if(s==='checking')setCallState('Jud raha hai…');
   };
   p.onconnectionstatechange=function(){ if(p.connectionState==='failed'||p.connectionState==='disconnected')endCall(true); };
@@ -1906,7 +1942,7 @@ async function startCall(voice){
   try{ await getMedia(voice); }catch(e){ alert(mediaErr(e,!voice)); return; }
   pc=newPc();
   localStream.getTracks().forEach(function(t){pc.addTrack(t,localStream)});
-  $('cv-cam').style.display=voice?'none':'';
+  $('cv-cam').style.display=voice?'none':''; spkInit(voice);
   iceQ=[]; callPeerCid=null; callPeerName=peer?peer.name:'';
   $('callview').style.display='block'; setCallState('Call ho rahi hai…');
   var offer=await pc.createOffer(); await pc.setLocalDescription(offer);
@@ -1929,7 +1965,7 @@ async function acceptCall(){
   try{ await getMedia(!!off.voice); }catch(e){ alert(mediaErr(e,!off.voice)); rtcSend({kind:'end',cid:cid}); return; }
   pc=newPc();
   localStream.getTracks().forEach(function(t){pc.addTrack(t,localStream)});
-  $('cv-cam').style.display=off.voice?'none':'';
+  $('cv-cam').style.display=off.voice?'none':''; spkInit(!!off.voice);
   $('callview').style.display='block'; setCallState('Jud raha hai…');
   await pc.setRemoteDescription(off.sdp);
   flushIce();
@@ -1957,6 +1993,28 @@ $('acall').onclick=function(){startCall(true)};
 $('rb-acc').onclick=acceptCall;
 $('rb-dec').onclick=declineCall;
 $('cv-end').onclick=function(){endCall(false)};
+/* speaker (neeche wala) <-> earpiece (upar wala, kaan ke paas) */
+var spkOn=false;
+function spkPaint(){ var b=$('cv-spk'); b.textContent=spkOn?'🔊':'📱'; b.title=spkOn?'Speaker':'Earpiece'; b.className=spkOn?'':'off'; b.style.background=spkOn?'#1c2530':'#2a6df4'; }
+async function spkApply(){
+  var rv=$('remoteV'); spkPaint();
+  try{
+    if(!rv.setSinkId||!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices){ return false; }
+    var ds=await navigator.mediaDevices.enumerateDevices();
+    var outs=ds.filter(function(d){return d.kind==='audiooutput'});
+    var ear=outs.filter(function(d){return /earpiece|handset|receiver|phone/i.test(d.label)})[0];
+    var spk=outs.filter(function(d){return /speaker/i.test(d.label)&&!/ear/i.test(d.label)})[0];
+    var pick=spkOn?(spk||outs.filter(function(d){return d.deviceId==='default'})[0]):(ear||outs.filter(function(d){return d.deviceId==='communications'})[0]);
+    if(!pick)return false;
+    await rv.setSinkId(pick.deviceId); return true;
+  }catch(e){ return false; }
+}
+function spkInit(voice){ spkOn=!voice?true:false; spkApply(); }
+$('cv-spk').onclick=async function(){
+  spkOn=!spkOn; var ok=await spkApply();
+  if(!ok)setCallState(spkOn?'Speaker (is phone mein switch support nahi)':'Earpiece (is phone mein switch support nahi)');
+  else setCallState(spkOn?'Speaker on':'Earpiece on');
+};
 $('cv-mic').onclick=function(){ micOn=!micOn; if(localStream)localStream.getAudioTracks().forEach(function(t){t.enabled=micOn}); this.className=micOn?'':'off'; };
 $('cv-cam').onclick=function(){ camOn=!camOn; if(localStream)localStream.getVideoTracks().forEach(function(t){t.enabled=camOn}); this.className=camOn?'':'off'; };
 
